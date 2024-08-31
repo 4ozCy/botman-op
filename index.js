@@ -373,7 +373,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         }
 
         if (!row) {
-          const redirectUri = `${process.env.BASE_URL}/auth/discord/callback`;
+          const redirectUri = process.env.BASE_URL;
           const loginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
 
           const embed = new EmbedBuilder()

@@ -5,7 +5,6 @@ const express = require('express');
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const server = express();
-const app = express();
 const { open } = require('sqlite');
 const port = process.env.PORT || 8080;
 const axios = require('axios');
@@ -19,15 +18,36 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
   }
 });
 
-app.use(session({
+server.get('/auth/discord', passport.authenticate('discord'));
+
+server.get('/auth/discord/callback', passport.authenticate('discord', {
+  failureRedirect: '/'
+}), (req, res) => {
+  res.redirect('/guild');
+});
+
+server.get('/guild', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/auth/discord');
+  }
+  
+  const guildCount = req.user.guildCount;
+  res.send(`You are in ${guildCount} guild(s).`);
+});
+    
+server.get('/', (req, res) => {
+  res.send(`botman here to serve you justice`)
+})
+
+server.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+server.use(passport.initialize());
+server.use(passport.session());
 
 passport.use(new DiscordStrategy({
   clientID: process.env.CLIENT_ID,
@@ -444,27 +464,6 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       });
   }
 });
-
-app.get('/auth/discord', passport.authenticate('discord'));
-
-app.get('/auth/discord/callback', passport.authenticate('discord', {
-  failureRedirect: '/'
-}), (req, res) => {
-  res.redirect('/guild');
-});
-
-app.get('/guild', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect('/auth/discord');
-  }
-  
-  const guildCount = req.user.guildCount;
-  res.send(`You are in ${guildCount} guild(s).`);
-});
-    
-server.all('/', (req, res) => {
-  res.send(`botman here to serve you justice`)
-})
 
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

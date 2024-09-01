@@ -101,7 +101,6 @@ app.get('/guild', (req, res) => {
                 const modifiedHtml = data.replace('{{guildCount}}', guildCount);
 
                 res.send(modifiedHtml);
-            });
 });
     
 app.get('/', (req, res) => {

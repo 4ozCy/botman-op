@@ -9,6 +9,8 @@ const { open } = require('sqlite');
 const port = process.env.PORT || 8080;
 const axios = require('axios');
 const session = require('express-session');
+const path = require('path');
+const fs = require('fs');
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -73,12 +75,38 @@ app.get('/auth/discord/callback', passport.authenticate('discord', {
 });
 
 app.get('/guild', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect('/auth/discord');
-  }
-  
-  const guildCount = req.user.guildCount;
-  res.send(`You are in ${guildCount} guild(s).`);
+    if (!req.isAuthenticated()) {
+        return res.redirect('/auth/discord');
+    }
+
+    db.get(`SELECT accessToken FROM users WHERE id = ?`, [req.user.id], async (err, row) => {
+        if (err) {
+            console.error('Database error:', err.message);
+            return res.status(500).send('An error occurred.');
+        }
+
+        try {
+            const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
+                headers: { Authorization: `Bearer ${row.accessToken}` }
+            });
+
+            const guildCount = userGuildsResponse.data.lengt
+          
+            fs.readFile(path.join(__dirname, 'guild.html'), 'utf8', (err, data) => {
+                if (err) {
+                    console.error('Error reading guild.html:', err);
+                    return res.status(500).send('An error occurred.');
+                }
+
+                const modifiedHtml = data.replace('{{guildCount}}', guildCount);
+
+                res.send(modifiedHtml);
+            });
+        } catch (apiError) {
+            console.error('Discord API error:', apiError.message);
+            res.status(500).send('Failed to retrieve guilds.');
+        }
+    });
 });
     
 app.get('/', (req, res) => {
@@ -447,23 +475,27 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             .addComponents(
               new ButtonBuilder()
                 .setLabel('Login')
-                .setStyle('Link')
+                .setStyle(ButtonStyle.Link)
                 .setURL(loginUrl)
             );
 
           return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
         }
 
-        const userGuilds = await axios.get('https://discord.com/api/users/@me/guilds', {
-        headers: { Authorization: `Bearer ${row.accessToken}` }
-      });
+const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
+          headers: { Authorization: `Bearer ${row.accessToken}` }
+        });
 
-      const guildCount = userGuilds.data.length;
-      return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
+        const guildCount = userGuildsResponse.data.length;
+        return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
+      } catch (apiError) {
+        console.error('Discord API error:', apiError.message);
+        return interaction.reply({ content: 'Failed to retrieve guilds. Please try again later.', ephemeral: true });
+      }
     });
   }
 });
-
+  
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

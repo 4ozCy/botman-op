@@ -10,35 +10,6 @@ const port = process.env.PORT || 8080;
 const axios = require('axios');
 const session = require('express-session');
 
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-  if (err) {
-    console.error('Failed to open the database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
-  }
-});
-
-app.get('/auth/discord', passport.authenticate('discord'));
-
-app.get('/auth/discord/callback', passport.authenticate('discord', {
-  failureRedirect: '/'
-}), (req, res) => {
-  res.redirect('/guild');
-});
-
-app.get('/guild', (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect('/auth/discord');
-  }
-  
-  const guildCount = req.user.guildCount;
-  res.send(`You are in ${guildCount} guild(s).`);
-});
-    
-app.get('/', (req, res) => {
-  res.send(`botman here to serve you justice`)
-})
-
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -84,6 +55,35 @@ passport.deserializeUser((id, done) => {
     return done(null, user);
   });
 });
+
+const db = new sqlite3.Database('./database.sqlite', (err) => {
+  if (err) {
+    console.error('Failed to open the database:', err.message);
+  } else {
+    console.log('Connected to the SQLite database.');
+  }
+});
+
+app.get('/auth/discord', passport.authenticate('discord'));
+
+app.get('/auth/discord/callback', passport.authenticate('discord', {
+  failureRedirect: '/'
+}), (req, res) => {
+  res.redirect('/guild');
+});
+
+app.get('/guild', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/auth/discord');
+  }
+  
+  const guildCount = req.user.guildCount;
+  res.send(`You are in ${guildCount} guild(s).`);
+});
+    
+app.get('/', (req, res) => {
+  res.send(`botman here to serve you justice`)
+})
 
 const client = new Client({
   intents: [
@@ -455,13 +455,12 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         }
 
         const userGuilds = await axios.get('https://discord.com/api/users/@me/guilds', {
-          headers: { Authorization: `Bearer ${row.accessToken}` }
-        });
-
-        const guildCount = userGuilds.data.length;
-
-        return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
+        headers: { Authorization: `Bearer ${row.accessToken}` }
       });
+
+      const guildCount = userGuilds.data.length;
+      return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
+    });
   }
 });
 

@@ -32,7 +32,7 @@ app.use(passport.session());
 passport.use(new DiscordStrategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: `${process.env.BASE_URL}/auth/discord/callback`;
+  callbackURL: `${process.env.BASE_URL}/auth/discord/callback`,
   scope: ['identify', 'guilds']
 }, async (accessToken, refreshToken, profile, done) => {
   try {
@@ -104,12 +104,6 @@ client.user.setActivity({
   type: ActivityType.Watching,
   });
 })
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-}));
 
 const commands = [
   new SlashCommandBuilder()

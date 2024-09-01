@@ -482,7 +482,6 @@ const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/gu
 
         const guildCount = userGuildsResponse.data.length;
         return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
-  }
 });
   
 app.listen(port, () => {

@@ -18,15 +18,15 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
   }
 });
 
-server.get('/auth/discord', passport.authenticate('discord'));
+app.get('/auth/discord', passport.authenticate('discord'));
 
-server.get('/auth/discord/callback', passport.authenticate('discord', {
+app.get('/auth/discord/callback', passport.authenticate('discord', {
   failureRedirect: '/'
 }), (req, res) => {
   res.redirect('/guild');
 });
 
-server.get('/guild', (req, res) => {
+app.get('/guild', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/auth/discord');
   }
@@ -35,19 +35,19 @@ server.get('/guild', (req, res) => {
   res.send(`You are in ${guildCount} guild(s).`);
 });
     
-server.get('/', (req, res) => {
+app.get('/', (req, res) => {
   res.send(`botman here to serve you justice`)
 })
 
-server.use(session({
+app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }
 }));
 
-server.use(passport.initialize());
-server.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
 
 passport.use(new DiscordStrategy({
   clientID: process.env.CLIENT_ID,
@@ -465,7 +465,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
   }
 });
 
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
 

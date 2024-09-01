@@ -483,11 +483,6 @@ const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/gu
 
         const guildCount = userGuildsResponse.data.length;
         return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
-      } catch (apiError) {
-        console.error('Discord API error:', apiError.message);
-        return interaction.reply({ content: 'Failed to retrieve guilds. Please try again later.', ephemeral: true });
-      }
-    });
   }
 });
   

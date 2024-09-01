@@ -32,7 +32,7 @@ app.use(passport.session());
 passport.use(new DiscordStrategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: process.env.BASE_URL,
+  callbackURL: `${process.env.BASE_URL}/auth/discord/callback`;
   scope: ['identify', 'guilds']
 }, async (accessToken, refreshToken, profile, done) => {
   try {
@@ -421,7 +421,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         }
 
         if (!row) {
-          const redirectUri = process.env.BASE_URL;
+          const redirectUri = `${process.env.BASE_URL}/auth/discord/callback`;
           const loginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
 
           const embed = new EmbedBuilder()

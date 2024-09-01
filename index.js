@@ -102,11 +102,6 @@ app.get('/guild', (req, res) => {
 
                 res.send(modifiedHtml);
             });
-        } catch (apiError) {
-            console.error('Discord API error:', apiError.message);
-            res.status(500).send('Failed to retrieve guilds.');
-        }
-    });
 });
     
 app.get('/', (req, res) => {

@@ -427,12 +427,12 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
           const embed = new EmbedBuilder()
             .setColor('#7289DA')
             .setTitle('Login Required')
-            .setDescription('To use this command, you need to log in. Please click the button below to log in with Discord.');
+            .setDescription('To use this command, you need to login through our application. Please click the button below to login.');
 
           const row = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
-                .setLabel('Login with Discord')
+                .setLabel('Login')
                 .setStyle('Link')
                 .setURL(loginUrl)
             );

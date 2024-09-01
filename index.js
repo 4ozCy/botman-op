@@ -2,6 +2,8 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
+const passport = require('passport');
+const DiscordStrategy = require('passport-discord').Strategy;
 const server = express();
 const app = express();
 const { open } = require('sqlite');
@@ -15,6 +17,52 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
   } else {
     console.log('Connected to the SQLite database.');
   }
+});
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new DiscordStrategy({
+  clientID: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  callbackURL: process.env.BASE_URL,
+  scope: ['identify', 'guilds']
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const userId = profile.id;
+    const username = profile.username;
+
+    db.run(`INSERT OR REPLACE INTO users (id, username, accessToken) VALUES (?, ?, ?)`, [userId, username, accessToken], (err) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        return done(err, null);
+      }
+      return done(null, profile);
+    });
+  } catch (error) {
+    console.error('Error during Discord authentication:', error);
+    return done(error, null);
+  }
+}));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, user) => {
+    if (err) {
+      return done(err, null);
+    }
+    return done(null, user);
+  });
 });
 
 const client = new Client({
@@ -36,7 +84,7 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 )`);
 
 const dbPromise = open({
-  filename: 'database.db',
+  filename: './database.db',
   driver: sqlite3.Database
 });
 
@@ -385,7 +433,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             .addComponents(
               new ButtonBuilder()
                 .setLabel('Login with Discord')
-                .setStyle(ButtonStyle.Link)
+                .setStyle('Link')
                 .setURL(loginUrl)
             );
 
@@ -396,53 +444,30 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
           headers: { Authorization: `Bearer ${row.accessToken}` }
         });
 
-        await interaction.reply({ content: `You are in ${userGuilds.data.length} guild(s).`, ephemeral: true });
-  });
+        const guildCount = userGuilds.data.length;
+
+        return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
+      });
   }
 });
 
-app.get('/auth/discord', (req, res) => {
-  const redirectUri = `${req.protocol}://${req.get('host')}/auth/discord/callback`;
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
-  res.redirect(url);
+app.get('/auth/discord', passport.authenticate('discord'));
+
+app.get('/auth/discord/callback', passport.authenticate('discord', {
+  failureRedirect: '/'
+}), (req, res) => {
+  res.redirect('/guild');
 });
 
-app.get('/auth/discord/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.send('No code provided');
-
-  const params = new URLSearchParams({
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: `${req.protocol}://${req.get('host')}/auth/discord/callback`
-  });
-
-const response = await axios.post('https://discord.com/api/oauth2/token', params.toString(), {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  });
-
-  const accessToken = response.data.access_token;
-
-  const userResponse = await axios.get('https://discord.com/api/users/@me', {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-
-  const userId = userResponse.data.id;
-  const username = userResponse.data.username;
-
-  db.run(`INSERT OR REPLACE INTO users (id, username, accessToken) VALUES (?, ?, ?)`, [userId, username, accessToken], (err) => {
-    if (err) {
-      console.error('Database error:', err.message);
-      return res.send('An error occurred. Please try again later.');
-    }
-
-    req.session.userId = userId;
-    res.send('Login successful! You can now use the getguilds command.');
-  });
+app.get('/guild', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/auth/discord');
+  }
+  
+  const guildCount = req.user.guildCount;
+  res.send(`You are in ${guildCount} guild(s).`);
 });
-
+    
 server.all('/', (req, res) => {
   res.send(`botman here to serve you justice`)
 })

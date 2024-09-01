@@ -475,13 +475,6 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
           return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
         }
-
-const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
-          headers: { Authorization: `Bearer ${row.accessToken}` }
-        });
-
-        const guildCount = userGuildsResponse.data.length;
-        return interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
 });
   
 app.listen(port, () => {

@@ -39,6 +39,9 @@ passport.use(new DiscordStrategy({
       }
       return done(null, profile);
     });
+  } catch (error) {
+    console.error('Error during Discord authentication:', error);
+    return done(error, null);
   }
 }));
 
@@ -77,27 +80,17 @@ app.get('/guild', (req, res) => {
     }
 
     db.get(`SELECT accessToken FROM users WHERE id = ?`, [req.user.id], async (err, row) => {
-        if (err) {
-            console.error('Database error:', err.message);
-            return res.status(500).send('An error occurred.');
-        }
+        const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
+            headers: { Authorization: `Bearer ${row.accessToken}` }
+        });
 
-        try {
-            const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
-                headers: { Authorization: `Bearer ${row.accessToken}` }
-            });
+        const guildCount = userGuildsResponse.data.length;
 
-            const guildCount = userGuildsResponse.data.lengt
-          
-            fs.readFile(path.join(__dirname, 'guild.html'), 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Error reading guild.html:', err);
-                    return res.status(500).send('An error occurred.');
-                }
-
-                const modifiedHtml = data.replace('{{guildCount}}', guildCount);
-
-                res.send(modifiedHtml);
+        fs.readFile(path.join(__dirname, 'guild.html'), 'utf8', (err, data) => {
+            const modifiedHtml = data.replace('{{guildCount}}', guildCount);
+            res.send(modifiedHtml);
+        });
+    });
 });
     
 app.get('/', (req, res) => {

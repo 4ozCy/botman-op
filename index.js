@@ -539,7 +539,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
       await ticketChannel.send({ embeds: [embed] });
       await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
-    }
+   }
   }
 });
   

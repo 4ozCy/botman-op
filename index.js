@@ -507,7 +507,6 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
     await targetChannel.send({ embeds: [embed], components: [row] });
     await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
   }
-}
 
 async function handleButton(interaction) {
   if (interaction.customId === 'create_ticket') {

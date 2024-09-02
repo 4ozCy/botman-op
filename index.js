@@ -579,7 +579,6 @@ async function handleTicketCreation(interaction) {
   await ticketChannel.send({ embeds: [embed] });
   await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
     }
-  }
 });
   
 app.listen(port, () => {

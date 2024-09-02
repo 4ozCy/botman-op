@@ -516,8 +516,9 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
           .setPlaceholder('Select a reason for your ticket')
           .addOptions(
             { label: 'General Support', value: 'general' },
-            { label: 'Staff Abuse', value: 'power abuse' },
-            { label: 'Other', value: 'other' }
+            { label: 'Staff Abuse', value: 'abuse' },
+            { label: 'Admin Abuse', value: 'adminabuse' },
+            { label: 'Other', value: 'other', }
           )
       );
     }
@@ -527,45 +528,65 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
   }
 }
 
-async function handleTicketCreation(interaction) {
+async function handleButton(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
-  let ticketChannelName;
 
-  if (interaction.customId === 'create_ticket_button') {
-    ticketChannelName = `ticket-${user.username}`;
-  } else if (interaction.customId === 'create_ticket_select') {
-    const reason = interaction.values[0];
-    ticketChannelName = `ticket-${reason}-${user.username}`;
+  if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
+    let ticketChannelName;
+
+    if (interaction.customId === 'create_ticket_button') {
+      ticketChannelName = `ticket-${user.username}`;
+    } else if (interaction.customId === 'create_ticket_select') {
+      const reason = interaction.values[0];
+      ticketChannelName = `ticket-${reason}-${user.username}`;
+    }
+
+    const category = interaction.channel.parent;
+
+    const ticketChannel = await guild.channels.create({
+      name: ticketChannelName,
+      type: ChannelType.GuildText,
+      parent: category.id,
+      permissionOverwrites: [
+        {
+          id: guild.roles.everyone,
+          deny: [PermissionsBitField.Flags.ViewChannel],
+        },
+        {
+          id: user.id,
+          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+        },
+        {
+          id: client.user.id,
+          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+        },
+      ],
+    });
+
+    const embed = new EmbedBuilder()
+      .setColor(0x00AE86)
+      .setTitle('Ticket Created')
+      .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+
+    const closeButton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('close_ticket')
+        .setLabel('Close Ticket')
+        .setStyle(ButtonStyle.Danger)
+    );
+
+    await ticketChannel.send({ embeds: [embed], components: [closeButton] });
+    await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
+  } else if (interaction.customId === 'close_ticket') {
+    const channel = interaction.channel;
+
+    await interaction.reply({ content: 'Closing ticket...', ephemeral: true });
+    setTimeout(async () => {
+      await channel.delete();
+    }, 5000);
   }
-
-  const ticketChannel = await guild.channels.create({
-    name: ticketChannelName,
-    type: ChannelType.GuildText,
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone,
-        deny: [PermissionsBitField.Flags.ViewChannel],
-      },
-      {
-        id: user.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-      },
-      {
-        id: client.user.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-      },
-    ],
-  });
-
-  const embed = new EmbedBuilder()
-    .setColor(0x00AE86)
-    .setTitle('Ticket Created')
-    .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
-
-  await ticketChannel.send({ embeds: [embed] });
-  await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
-  }
+}
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

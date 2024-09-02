@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -267,11 +267,22 @@ const commands = [
     .addChannelOption(option =>
       option.setName('channel')
         .setDescription('The channel where the ticket panel will be posted')
-        .setRequired(true))
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName('method')
+        .setDescription('Choose between button or selection menu')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Button', value: 'button' },
+          { name: 'Selection', value: 'selection' }
+        )
+    )
     .addStringOption(option =>
       option.setName('message')
         .setDescription('Custom message to display in the ticket panel')
-        .setRequired(true))
+        .setRequired(false)
+    )
     .toJSON(),
 ];
 
@@ -290,9 +301,15 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 })();
 
 client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
+  if (interaction.isCommand()) {
+    handleCommand(interaction);
+  } else if (interaction.isButton() || interaction.isSelectMenu()) {
+    handleTicketCreation(interaction);
+  }
+});
 
-  const { commandName, user, options, guild } = interaction;
+async function handleCommand(interaction) {
+  const { commandName, options, user, guild } = interaction;
 
   if (commandName === 'kick') {
     const user = options.getUser('user');
@@ -488,7 +505,8 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         });
     
     } else if (commandName === 'ticket-panel') {
-      const targetChannel = options.getChannel('channel');
+     const targetChannel = options.getChannel('channel');
+    const method = options.getString('method');
     const customMessage = options.getString('message') || 'Click the button below to create a support ticket.';
 
     const embed = new EmbedBuilder()
@@ -496,48 +514,70 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       .setTitle('Create a Ticket')
       .setDescription(customMessage);
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('create_ticket')
-        .setLabel('Create Ticket')
-        .setStyle(ButtonStyle.Primary)
-    );
+    let row;
+    if (method === 'button') {
+      row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('create_ticket_button')
+          .setLabel('Create Ticket')
+          .setStyle(ButtonStyle.Primary)
+      );
+    } else if (method === 'selection') {
+      row = new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId('create_ticket_select')
+          .setPlaceholder('Select a reason for your ticket')
+          .addOptions(
+            { label: 'General Support', value: 'general' },
+            { label: 'Staff Abuse', value: 'power abuse' },
+            { label: 'Other', value: 'other' }
+          )
+      );
+    }
 
     await targetChannel.send({ embeds: [embed], components: [row] });
     await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
   }
+}
 
-async function handleButton(interaction) {
-  if (interaction.customId === 'create_ticket') {
-    const guild = interaction.guild;
-    const user = interaction.user;
+async function handleTicketCreation(interaction) {
+  const guild = interaction.guild;
+  const user = interaction.user;
+  let ticketChannelName;
 
-    const ticketChannel = await guild.channels.create({
-      name: `ticket-${user.username}`,
-      type: ChannelType.GuildText,
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone,
-          deny: [PermissionsBitField.Flags.ViewChannel],
-        },
-        {
-          id: user.id,
-          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-        },
-        {
-          id: client.user.id,
-          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-        },
-      ],
-    });
+  if (interaction.customId === 'create_ticket_button') {
+    ticketChannelName = `ticket-${user.username}`;
+  } else if (interaction.customId === 'create_ticket_select') {
+    const reason = interaction.values[0];
+    ticketChannelName = `ticket-${reason}-${user.username}`;
+  }
 
-    const embed = new EmbedBuilder()
-      .setColor(0x00AE86)
-      .setTitle('Ticket Created')
-      .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+  const ticketChannel = await guild.channels.create({
+    name: ticketChannelName,
+    type: ChannelType.GuildText,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone,
+        deny: [PermissionsBitField.Flags.ViewChannel],
+      },
+      {
+        id: user.id,
+        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+      },
+      {
+        id: client.user.id,
+        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+      },
+    ],
+  });
 
-    await ticketChannel.send({ embeds: [embed] });
-    await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
+  const embed = new EmbedBuilder()
+    .setColor(0x00AE86)
+    .setTitle('Ticket Created')
+    .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+
+  await ticketChannel.send({ embeds: [embed] });
+  await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
     }
   }
 });

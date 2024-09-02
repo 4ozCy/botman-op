@@ -150,7 +150,6 @@ const commands = [
         .setDescription('Reason for the kick')
         .setRequired(false))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('ban')
     .setDescription('Ban a user from the server')
@@ -163,7 +162,6 @@ const commands = [
         .setDescription('Reason for the ban')
         .setRequired(false))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('mute')
     .setDescription('Mute a user in the server')
@@ -176,7 +174,6 @@ const commands = [
         .setDescription('Reason for the mute')
         .setRequired(false))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('unmute')
     .setDescription('Unmute a user in the server')
@@ -185,7 +182,6 @@ const commands = [
         .setDescription('The user to unmute')
         .setRequired(true))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('warn')
     .setDescription('Warn a user')
@@ -198,7 +194,6 @@ const commands = [
         .setDescription('Reason for the warning')
         .setRequired(false))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('warnings')
     .setDescription('Check a user\'s warning count')
@@ -207,7 +202,6 @@ const commands = [
         .setDescription('The user to check')
         .setRequired(true))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('timeout')
     .setDescription('Temporarily restrict a user\'s ability to send messages')
@@ -224,7 +218,6 @@ const commands = [
         .setDescription('Reason for the timeout')
         .setRequired(false))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('role')
     .setDescription('Manage user roles')
@@ -241,7 +234,6 @@ const commands = [
         .addUserOption(option => option.setName('user').setDescription('User to remove role from').setRequired(true))
         .addRoleOption(option => option.setName('role').setDescription('Role to remove').setRequired(true)))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('user-info')
     .setDescription('get information about a user')
@@ -250,25 +242,21 @@ const commands = [
         .setDescription('User to get info about')
         .setRequired(true))
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('server-info')
     .setDescription('get information about the server')
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('get-guilds')
     .setDescription('Get the number of guilds the user is in')
     .toJSON(),
-  
   new SlashCommandBuilder()
     .setName('ticket-panel')
     .setDescription('Creates a ticket panel for users to create tickets')
     .addChannelOption(option =>
       option.setName('channel')
         .setDescription('The channel where the ticket panel will be posted')
-        .setRequired(true)
-    )
+        .setRequired(true))
     .addStringOption(option =>
       option.setName('method')
         .setDescription('Choose between button or selection menu')
@@ -281,8 +269,7 @@ const commands = [
     .addStringOption(option =>
       option.setName('message')
         .setDescription('Custom message to display in the ticket panel')
-        .setRequired(false)
-    )
+        .setRequired(false))
     .toJSON(),
 ];
 

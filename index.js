@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
@@ -11,6 +10,7 @@ const axios = require('axios');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -39,9 +39,6 @@ passport.use(new DiscordStrategy({
       }
       return done(null, profile);
     });
-  } catch (error) {
-    console.error('Error during Discord authentication:', error);
-    return done(error, null);
   }
 }));
 

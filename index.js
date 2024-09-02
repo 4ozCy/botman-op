@@ -267,13 +267,11 @@ const commands = [
     .addChannelOption(option =>
       option.setName('channel')
         .setDescription('The channel where the ticket panel will be posted')
-        .setRequired(true)
-    )
+        .setRequired(true))
     .addStringOption(option =>
       option.setName('message')
         .setDescription('Custom message to display in the ticket panel')
-        .setRequired(false)
-    )
+        .setRequired(true))
     .toJSON(),
 ];
 
@@ -488,6 +486,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             const guildCount = userGuilds.data.length;
             interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
         });
+    
     } else if (commandName === 'ticket-panel') {
       const targetChannel = options.getChannel('channel');
     const customMessage = options.getString('message') || 'Click the button below to create a support ticket.';

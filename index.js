@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -260,6 +260,21 @@ const commands = [
     .setName('get-guilds')
     .setDescription('Get the number of guilds the user is in')
     .toJSON(),
+  
+  new SlashCommandBuilder()
+    .setName('ticket-panel')
+    .setDescription('Creates a ticket panel for users to create tickets')
+    .addChannelOption(option =>
+      option.setName('channel')
+        .setDescription('The channel where the ticket panel will be posted')
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName('message')
+        .setDescription('Custom message to display in the ticket panel')
+        .setRequired(false)
+    )
+    .toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -473,7 +488,59 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             const guildCount = userGuilds.data.length;
             interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
         });
+    } else if (commandName === 'ticket-panel') {
+      const targetChannel = options.getChannel('channel');
+      const customMessage = options.getString('message');
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00AE86)
+        .setTitle('Create a Ticket')
+        .setDescription(customMessage || 'Click the button below to create a support ticket.');
+
+      const row = new ActionRowBuilder()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('create_ticket')
+            .setLabel('Create Ticket')
+            .setStyle(ButtonStyle.Primary)
+        );
+
+      await targetChannel.send({ embeds: [embed], components: [row] });
+      await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
     }
+  } else if (interaction.isButton()) {
+    if (interaction.customId === 'create_ticket') {
+      const guild = interaction.guild;
+      const user = interaction.user;
+
+      const ticketChannel = await guild.channels.create({
+        name: `ticket-${user.username}`,
+        type: ChannelType.GuildText,
+        permissionOverwrites: [
+          {
+            id: guild.roles.everyone,
+            deny: [PermissionsBitField.Flags.ViewChannel],
+          },
+          {
+            id: user.id,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+          },
+          {
+            id: client.user.id,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+          },
+        ],
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00AE86)
+        .setTitle('Ticket Created')
+        .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+
+      await ticketChannel.send({ embeds: [embed] });
+      await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
+    }
+  }
 });
   
 app.listen(port, () => {

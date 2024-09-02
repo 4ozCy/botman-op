@@ -490,56 +490,57 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         });
     } else if (commandName === 'ticket-panel') {
       const targetChannel = options.getChannel('channel');
-      const customMessage = options.getString('message');
+    const customMessage = options.getString('message') || 'Click the button below to create a support ticket.';
 
-      const embed = new EmbedBuilder()
-        .setColor(0x00AE86)
-        .setTitle('Create a Ticket')
-        .setDescription(customMessage || 'Click the button below to create a support ticket.');
+    const embed = new EmbedBuilder()
+      .setColor(0x00AE86)
+      .setTitle('Create a Ticket')
+      .setDescription(customMessage);
 
-      const row = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('create_ticket')
-            .setLabel('Create Ticket')
-            .setStyle(ButtonStyle.Primary)
-        );
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('create_ticket')
+        .setLabel('Create Ticket')
+        .setStyle(ButtonStyle.Primary)
+    );
 
-      await targetChannel.send({ embeds: [embed], components: [row] });
-      await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
+    await targetChannel.send({ embeds: [embed], components: [row] });
+    await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
+  }
+}
+
+async function handleButton(interaction) {
+  if (interaction.customId === 'create_ticket') {
+    const guild = interaction.guild;
+    const user = interaction.user;
+
+    const ticketChannel = await guild.channels.create({
+      name: `ticket-${user.username}`,
+      type: ChannelType.GuildText,
+      permissionOverwrites: [
+        {
+          id: guild.roles.everyone,
+          deny: [PermissionsBitField.Flags.ViewChannel],
+        },
+        {
+          id: user.id,
+          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+        },
+        {
+          id: client.user.id,
+          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+        },
+      ],
+    });
+
+    const embed = new EmbedBuilder()
+      .setColor(0x00AE86)
+      .setTitle('Ticket Created')
+      .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+
+    await ticketChannel.send({ embeds: [embed] });
+    await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
     }
-  } else if (interaction.isButton()) {
-    if (interaction.customId === 'create_ticket') {
-      const guild = interaction.guild;
-      const user = interaction.user;
-
-      const ticketChannel = await guild.channels.create({
-        name: `ticket-${user.username}`,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          {
-            id: guild.roles.everyone,
-            deny: [PermissionsBitField.Flags.ViewChannel],
-          },
-          {
-            id: user.id,
-            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-          },
-          {
-            id: client.user.id,
-            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-          },
-        ],
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor(0x00AE86)
-        .setTitle('Ticket Created')
-        .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
-
-      await ticketChannel.send({ embeds: [embed] });
-      await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
-   }
   }
 });
   

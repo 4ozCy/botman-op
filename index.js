@@ -533,9 +533,9 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 async function handleButton(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
+  let ticketChannelName;
 
   if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
-    let ticketChannelName;
 
     if (interaction.customId === 'create_ticket_button') {
       ticketChannelName = `ticket-${user.username}`;
@@ -546,10 +546,18 @@ async function handleButton(interaction) {
 
     const category = interaction.channel.parent;
 
+    console.log(`Category ID: ${category?.id}`);
+    
+    const botMember = guild.members.cache.get(client.user.id);
+    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
+      console.log('Bot does not have permission to manage channels');
+      return;
+    }
+
     const ticketChannel = await guild.channels.create({
       name: ticketChannelName,
       type: ChannelType.GuildText,
-      parent: category.id,
+      parent: category ? category.id : null,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,

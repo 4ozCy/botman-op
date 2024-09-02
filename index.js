@@ -470,7 +470,9 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
           const embed = new EmbedBuilder()
             .setColor('#7289DA')
             .setTitle('Login Required')
-            .setDescription('To use this command, you need to login through our application. Please click the button below to login.');
+            .setDescription('To use this command, you need to login through our application. Please click the button below to login.')
+            .setFooter({ text: 'Powered By: @nozcy.' })
+            .setThumbnail(client.user.displayAvatarURL());
 
           const row = new ActionRowBuilder()
             .addComponents(
@@ -498,8 +500,10 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
     const embed = new EmbedBuilder()
       .setColor(0x00AE86)
-      .setTitle('Create a Ticket')
+      .setTitle('Ticket')
       .setDescription(customMessage);
+      .setFooter({ text: 'Powered By: @nozcy.' })
+      .setThumbnail(client.user.displayAvatarURL());
 
     let row;
     if (method === 'button') {
@@ -568,13 +572,15 @@ async function handleButton(interaction) {
       .setColor(0x00AE86)
       .setTitle('Ticket Created')
       .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`);
+      .setFooter({ text: 'Powered By: @nozcy.' })
+      .setThumbnail(client.user.displayAvatarURL());
 
     const closeButton = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('close_ticket')
         .setLabel('Close Ticket')
         .setStyle(ButtonStyle.Danger)
-    );
+        );
 
     await ticketChannel.send({ embeds: [embed], components: [closeButton] });
     await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });

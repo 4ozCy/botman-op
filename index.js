@@ -298,7 +298,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 async function handleCommand(interaction) {
-  const { commandName, options, user, guild } = interaction;
+  const { commandName, options, user, guild, channel } = interaction;
 
   if (commandName === 'kick') {
     const user = options.getUser('user');
@@ -537,9 +537,10 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 async function handleButton(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
+  const channel = interaction.channel;
+  let ticketChannelName;
 
   if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
-    let ticketChannelName;
 
     if (interaction.customId === 'create_ticket_button') {
       ticketChannelName = `ticket-${user.username}`;
@@ -551,7 +552,6 @@ async function handleButton(interaction) {
     const ticketChannel = await guild.channels.create({
       name: ticketChannelName,
       type: ChannelType.GuildText,
-      position: 100,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,

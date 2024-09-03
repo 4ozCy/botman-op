@@ -109,7 +109,7 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
-const TICKET_CATEGORY_ID = '1215740480437096633';
+const WHITELISTED_IDS = ['1107744228773220473', '1072839015079870494'];
 
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -273,6 +273,10 @@ const commands = [
         .setDescription('Custom message to display in the ticket panel')
         .setRequired(false))
     .toJSON(),
+  new SlashCommandBuilder()
+        .setName('special-thing')
+        .setDescription('Somthing Special:>')
+        .toJSON(),
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -593,8 +597,28 @@ async function handleButton(interaction) {
     setTimeout(async () => {
       await channel.delete();
     }, 5000);
+    
+  } else if (commandName === 'special-thing') {
+    if (!WHITELISTED_IDS.includes(user.id)) {
+      return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
+    }
+
+    try {
+      const response = await axios.get('https://purrbot.site/api/img/nsfw/fuck/gif');
+      const gifUrl = response.data.link;
+
+      const embed = new EmbedBuilder()
+        .setColor('#FF69B4')
+        .setTitle('somthing special')
+        .setImage(gifUrl);
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    } catch (error) {
+      console.error('Error idk:', error);
+      await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
+    }
   }
-}
+});
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

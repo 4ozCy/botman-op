@@ -496,7 +496,26 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             const guildCount = userGuilds.data.length;
             interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
         });
-    
+
+    } else if (commandName === 'special-thing') {
+    if (!WHITELISTED_IDS.includes(user.id)) {
+      return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
+    }
+
+    try {
+      const response = await axios.get('https://purrbot.site/api/img/nsfw/fuck/gif');
+      const gifUrl = response.data.link;
+
+      const embed = new EmbedBuilder()
+        .setColor('#FF69B4')
+        .setTitle('somthing special')
+        .setImage(gifUrl);
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    } catch (error) {
+      console.error('Error idk:', error);
+      await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
+       }
     } else if (commandName === 'ticket-panel') {
      const targetChannel = options.getChannel('channel');
     const method = options.getString('method');
@@ -597,27 +616,8 @@ async function handleButton(interaction) {
     setTimeout(async () => {
       await channel.delete();
     }, 5000);
-    
-  } else if (commandName === 'special-thing') {
-    if (!WHITELISTED_IDS.includes(user.id)) {
-      return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
-    }
-
-    try {
-      const response = await axios.get('https://purrbot.site/api/img/nsfw/fuck/gif');
-      const gifUrl = response.data.link;
-
-      const embed = new EmbedBuilder()
-        .setColor('#FF69B4')
-        .setTitle('somthing special')
-        .setImage(gifUrl);
-
-      await interaction.reply({ embeds: [embed], ephemeral: true });
-    } catch (error) {
-      console.error('Error idk:', error);
-      await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
-    }
-  });
+  }
+}
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

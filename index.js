@@ -502,8 +502,10 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       .setColor(0x00AE86)
       .setTitle('Ticket')
       .setDescription(customMessage)
-      .setFooter({ text: 'Powered By: @nozcy.' })
-      .setThumbnail(client.user.displayAvatarURL());
+      .setFooter({
+        text: 'Powered By: @nozcy.',
+        iconURL: client.user.displayAvatarURL({ dynamic: true, size: 16 })
+      });
 
     let row;
     if (method === 'button') {
@@ -535,9 +537,9 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 async function handleButton(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
-  let ticketChannelName;
 
   if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
+    let ticketChannelName;
 
     if (interaction.customId === 'create_ticket_button') {
       ticketChannelName = `ticket-${user.username}`;
@@ -570,14 +572,17 @@ async function handleButton(interaction) {
       .setColor(0x00AE86)
       .setTitle('Ticket Created')
       .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`)
-      .setFooter({ text: 'Powered By: @nozcy.' })
-      .setThumbnail(client.user.displayAvatarURL());
+      .setFooter({
+        text: 'Powered By: @nozcy.',
+        iconURL: client.user.displayAvatarURL({ dynamic: true, size: 16 })
+      });
 
     const closeButton = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('close_ticket')
         .setLabel('Close Ticket')
-        .setStyle(ButtonStyle.Danger));
+        .setStyle(ButtonStyle.Danger)
+    );
 
     await ticketChannel.send({ embeds: [embed], components: [closeButton] });
     await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
@@ -589,7 +594,6 @@ async function handleButton(interaction) {
       await channel.delete();
     }, 5000);
   }
-}
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

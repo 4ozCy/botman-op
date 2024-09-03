@@ -279,9 +279,9 @@ const commands = [
         .toJSON(),
 ];
 
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-
 (async () => {
+  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+
   try {
     await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
@@ -289,7 +289,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     );
     console.log('Successfully registered application commands.');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering application commands:', error);
   }
 })();
 

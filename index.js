@@ -574,7 +574,7 @@ async function handleButton(interaction) {
       .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`)
       .setFooter({
         text: 'Powered By: @nozcy.',
-        iconURL: client.user.displayAvatarURL({ dynamic: true, size: 16 })
+        iconURL: client.user.displayAvatarURL({ dynamic: true })
       });
 
     const closeButton = new ActionRowBuilder().addComponents(

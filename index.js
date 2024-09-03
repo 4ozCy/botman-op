@@ -617,7 +617,7 @@ async function handleButton(interaction) {
       console.error('Error idk:', error);
       await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
     }
-  }
+  });
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

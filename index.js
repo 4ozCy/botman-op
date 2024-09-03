@@ -551,7 +551,7 @@ async function handleButton(interaction) {
     const ticketChannel = await guild.channels.create({
       name: ticketChannelName,
       type: ChannelType.GuildText,
-      parent: TICKET_CATEGORY_ID,
+      position: 100,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,

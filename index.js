@@ -109,6 +109,8 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
+const TICKET_CATEGORY_ID = '1215740480437096633';
+
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
@@ -544,20 +546,10 @@ async function handleButton(interaction) {
       ticketChannelName = `ticket-${reason}-${user.username}`;
     }
 
-    const category = interaction.channel.parent;
-
-    console.log(`Category ID: ${category?.id}`);
-    
-    const botMember = guild.members.cache.get(client.user.id);
-    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
-      console.log('Bot does not have permission to manage channels');
-      return;
-    }
-
     const ticketChannel = await guild.channels.create({
       name: ticketChannelName,
       type: ChannelType.GuildText,
-      parent: category ? category.id : null,
+      parent: TICKET_CATEGORY_ID,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,

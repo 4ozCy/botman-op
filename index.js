@@ -516,7 +516,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('create_ticket_button')
-          .setLabel('Create Ticket')
+          .setLabel('✉️ Create Ticket')
           .setStyle(ButtonStyle.Primary)
       );
     } else if (method === 'selection') {
@@ -618,7 +618,6 @@ async function handleButton(interaction) {
       await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
     }
   }
-});
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

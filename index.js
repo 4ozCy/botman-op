@@ -568,7 +568,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             .setImage(gifUrl);
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
-       }
+    
     } else if (commandName === 'ticket-panel') {
      const targetChannel = options.getChannel('channel');
     const method = options.getString('method');

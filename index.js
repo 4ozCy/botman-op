@@ -298,6 +298,62 @@ const commands = [
   }
 })();
 
+const TARGET_CHANNEL_ID = '1280962423553265785';
+let isRequesting = false;
+
+async function startRequests(channel) {
+    isRequesting = true;
+    channel.send('Started making requests.');
+
+    while (isRequesting) {
+        try {
+            const apiUrls = [
+                'https://purrbot.site/api/img/nsfw/fuck/gif',
+                'https://purrbot.site/api/img/nsfw/anal/gif',
+                'https://purrbot.site/api/img/nsfw/pussylick/gif',
+                'https://purrbot.site/api/img/nsfw/yuri/gif'
+            ];
+            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
+
+            const response = await axios.get(randomApiUrl);
+            const gifUrl = response.data.link;
+
+            const embed = new EmbedBuilder()
+                .setColor('#FF69B4')
+                .setImage(gifUrl);
+                
+            await channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error('Error making request:', error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+}
+
+function stopRequests(channel) {
+    isRequesting = false;
+    channel.send('Stopped making requests.');
+}
+
+client.on('messageCreate', async message => {
+    if (message.channel.id !== TARGET_CHANNEL_ID) return;
+
+    if (message.content.toLowerCase().includes('botman start')) {
+        if (!isRequesting) {
+            startRequests(message.channel);
+        } else {
+            message.channel.send('Requests are already running.');
+        }
+    } else if (message.content.toLowerCase().includes('botman stop')) {
+        if (isRequesting) {
+            stopRequests(message.channel);
+        } else {
+            message.channel.send('Requests are not running.');
+        }
+    }
+});
+
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {
     handleCommand(interaction);

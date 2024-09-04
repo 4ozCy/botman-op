@@ -659,8 +659,6 @@ const message = await interaction.channel.send(notificationMessage);
 setTimeout(() => {
     message.delete().catch(console.error);
 }, 4000);
-  
-    await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
   }
   
 app.listen(port, () => {

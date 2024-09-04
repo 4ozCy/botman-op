@@ -109,7 +109,7 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
-const WHITELISTED_IDS = ['1107744228773220473', '1072839015079870494'];
+const WHITELISTED_IDS = ['1107744228773220473', '1072839015079870494', '936931540624105483'];
 
 const apiUrls = [
   'https://purrbot.site/api/img/nsfw/solo/gif',

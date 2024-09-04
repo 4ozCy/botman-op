@@ -5,7 +5,7 @@ const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const app = express();
 const { open } = require('sqlite');
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 const axios = require('axios');
 const session = require('express-session');
 const path = require('path');
@@ -597,4 +597,3 @@ app.listen(port, () => {
 });
 
 client.login(process.env.TOKEN);
-// made by 4ozCy.int

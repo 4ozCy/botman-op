@@ -119,8 +119,6 @@ const apiUrls = [
   'https://purrbot.site/api/img/nsfw/fuck/gif'
   ];
 
-const TICKET_CATEGORY = '1215740480437096633';
-
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
@@ -265,27 +263,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('get-guilds')
     .setDescription('Get the number of guilds the user is in')
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('ticket-panel')
-    .setDescription('Creates a ticket panel for users to create tickets')
-    .addChannelOption(option =>
-      option.setName('channel')
-        .setDescription('The channel where the ticket panel will be posted')
-        .setRequired(true))
-    .addStringOption(option =>
-      option.setName('method')
-        .setDescription('Choose between button or selection menu')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Button', value: 'button' },
-          { name: 'Selection', value: 'selection' }
-        )
-    )
-    .addStringOption(option =>
-      option.setName('message')
-        .setDescription('Custom message to display in the ticket panel')
-        .setRequired(false))
     .toJSON(),
   new SlashCommandBuilder()
     .setName('whitelist')
@@ -568,94 +545,8 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             .setImage(gifUrl);
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
-    
-    } else if (commandName === 'ticket-panel') {
-     const targetChannel = options.getChannel('channel');
-    const method = options.getString('method');
-    const customMessage = options.getString('message') || 'Click the button below to create a support ticket.';
-
-    const embed = new EmbedBuilder()
-      .setColor(0x00AE86)
-      .setTitle('Ticket')
-      .setDescription(customMessage)
-      .setFooter({
-        text: 'Botman the justice hero | Powered By: @nozcy.int',
-        iconURL: client.user.displayAvatarURL({ dynamic: true })
-      });
-
-    let row;
-    if (method === 'button') {
-      row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('create_ticket_button')
-          .setLabel('✉️ Create Ticket')
-          .setStyle(ButtonStyle.Primary)
-      );
-    } else if (method === 'selection') {
-      row = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId('create_ticket_select')
-          .setPlaceholder('Select a reason for your ticket')
-          .addOptions(
-            { label: 'General Support', value: 'general' },
-            { label: 'Staff Abuse', value: 'abuse' },
-            { label: 'Admin Abuse', value: 'adminabuse' },
-            { label: 'Other', value: 'other', }
-          )
-      );
-    }
-
-    await targetChannel.send({ embeds: [embed], components: [row] });
-    await interaction.reply({ content: `Ticket panel created in ${targetChannel}`, ephemeral: true });
   }
-}
-
-async function handleTicketCreation(interaction) {
-  const guild = interaction.guild;
-  const user = interaction.user;
-  let ticketChannelName;
-
-  if (interaction.customId === 'create_ticket_button') {
-    ticketChannelName = `ticket-${user.username}`;
-  } else if (interaction.customId === 'create_ticket_select') {
-    const reason = interaction.values[0];
-    ticketChannelName = `ticket-${reason}-${user.username}`;
-  }
-
-  const ticketChannel = await guild.channels.create({
-    name: ticketChannelName,
-    type: ChannelType.GuildText,
-    parent: TICKET_CATEGORY,
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone,
-        deny: [PermissionsBitField.Flags.ViewChannel],
-      },
-      {
-        id: user.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-      },
-      {
-        id: client.user.id,
-        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-      },
-    ],
-  });
-
-    const embed = new EmbedBuilder()
-      .setColor(0x00AE86)
-      .setTitle('Ticket Created')
-      .setDescription(`Ticket created by ${user.username} Support will be with you shortly or you can mention one them.`)
-      .setFooter({
-        text: 'Botman the justice hero | Powered By: @nozcy.int',
-        iconURL: client.user.displayAvatarURL({ dynamic: true })
-      });
-
-    await ticketChannel.send({ embeds: [embed] });
-
-const notificationMessage = `A new ticket has been created: ${ticketChannel} by ${user}`;
-    await interaction.channel.send(notificationMessage);
-}
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

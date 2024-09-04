@@ -272,11 +272,13 @@ const commands = [
     .setName('add')
     .setDescription('Add a user to the whitelist')
     .addUserOption(option => option.setName('user').setDescription('The user to add').setRequired(true))
+      )
     .addSubcommand(subcommand =>
         subcommand
     .setName('remove')
     .setDescription('Remove a user from the whitelist')
     .addUserOption(option => option.setName('user').setDescription('The user to remove').setRequired(true))
+      )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('special-thing')

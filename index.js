@@ -546,7 +546,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
   }
-});
+}
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

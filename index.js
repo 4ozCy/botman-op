@@ -654,12 +654,8 @@ async function handleTicketCreation(interaction) {
     await ticketChannel.send({ embeds: [embed] });
 
 const notificationMessage = `A new ticket has been created: ${ticketChannel} by ${user}`;
-const message = await interaction.channel.send(notificationMessage);
-
-setTimeout(() => {
-    message.delete().catch(console.error);
-}, 4000);
-  }
+    await interaction.channel.send(notificationMessage);
+}
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

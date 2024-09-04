@@ -622,7 +622,6 @@ async function handleTicketCreation(interaction) {
 
     await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
   }
-}
   
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

@@ -544,7 +544,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       .setTitle('Ticket')
       .setDescription(customMessage)
       .setFooter({
-        text: 'Botman the justice hero | Powered By: @nozcy.',
+        text: 'Botman the justice hero | Powered By: @nozcy.int',
         iconURL: client.user.displayAvatarURL({ dynamic: true })
       });
 
@@ -575,44 +575,44 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
   }
 }
 
-async function handleButton(interaction) {
+async function handleTicketCreation(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
+  let ticketChannelName;
 
-  if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
-    let ticketChannelName = `ticket-${user.username}`;
+  if (interaction.customId === 'create_ticket_button') {
+    ticketChannelName = `ticket-${user.username}`;
+  } else if (interaction.customId === 'create_ticket_select') {
+    const reason = interaction.values[0];
+    ticketChannelName = `ticket-${reason}-${user.username}`;
+  }
 
-    if (interaction.customId === 'create_ticket_select') {
-      const reason = interaction.values[0];
-      ticketChannelName = `ticket-${reason}-${user.username}`;
-    }
-
-    const ticketChannel = await guild.channels.create({
-      name: ticketChannelName,
-      type: ChannelType.GuildText,
-      parent: TICKET_CATEGORY_ID,
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone,
-          deny: [PermissionsBitField.Flags.ViewChannel],
-        },
-        {
-          id: user.id,
-          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-        },
-        {
-          id: client.user.id,
-          allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
-        },
-      ],
-    });
+  const ticketChannel = await guild.channels.create({
+    name: ticketChannelName,
+    type: ChannelType.GuildText,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone,
+        deny: [PermissionsBitField.Flags.ViewChannel],
+      },
+      {
+        id: user.id,
+        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+      },
+      {
+        id: client.user.id,
+        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+      },
+    ],
+  });
 
     const embed = new EmbedBuilder()
       .setColor(0x00AE86)
       .setTitle('Ticket Created')
       .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`)
       .setFooter({
-        text: 'Powered By: @nozcy. | Credit to him',
+        text: 'Botman the justice her | Powered By: @nozcy.int',
+        iconURL: client.user.displayAvatarURL({ dynamic: true })
       });
 
     await ticketChannel.send({ embeds: [embed] });

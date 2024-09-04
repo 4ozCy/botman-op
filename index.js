@@ -109,7 +109,7 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
-const WHITELISTED_IDS = ['1107744228773220473', '1072839015079870494', '936931540624105483'];
+const ownerId = '1107744228773220473';
 
 const apiUrls = [
   'https://purrbot.site/api/img/nsfw/solo/gif',
@@ -119,10 +119,16 @@ const apiUrls = [
   'https://purrbot.site/api/img/nsfw/fuck/gif'
   ];
 
+const TICKET_CATEGORY = '1215740480437096633';
+
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
   accessToken TEXT NOT NULL
+)`);
+
+db.run(`CREATE TABLE IF NOT EXISTS whitelist (
+  userId TEXT PRIMARY KEY
 )`);
 
 const dbPromise = open({
@@ -280,6 +286,20 @@ const commands = [
       option.setName('message')
         .setDescription('Custom message to display in the ticket panel')
         .setRequired(false))
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('whitelist')
+    .setDescription('Manage the whitelist for the special command')
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('add')
+            .setDescription('Add a user to the whitelist')
+            .addUserOption(option => option.setName('user').setDescription('The user to add').setRequired(true))
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('remove')
+            .setDescription('Remove a user from the whitelist')
+            .addUserOption(option => option.setName('user').setDescription('The user to remove').setRequired(true))
     .toJSON(),
   new SlashCommandBuilder()
         .setName('special-thing')
@@ -515,24 +535,37 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
         });
 
-    } else if (commandName === 'special-thing') {
-    if (!WHITELISTED_IDS.includes(user.id)) {
-      return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
-    }
+    } else if (commandName === 'whitelist') {
+        if (user.id !== ownerId) {
+            return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
+        }
 
-    try {
-      const randomApi = apiUrls[Math.floor(Math.random() * apiUrls.length)];
+        const targetUser = options.getUser('user');
+        const subcommand = options.getSubcommand();
+
+        if (subcommand === 'add') {
+            await db.run('INSERT OR REPLACE INTO whitelist (userId) VALUES (?)', [targetUser.id]);
+            await interaction.reply({ content: `${targetUser.tag} has been added to the whitelist.`, ephemeral: true });
+        } else if (subcommand === 'remove') {
+            await db.run('DELETE FROM whitelist WHERE userId = ?', [targetUser.id]);
+            await interaction.reply({ content: `${targetUser.tag} has been removed from the whitelist.`, ephemeral: true });
+        }
+    } else if (commandName === 'special-thing') {
+        const isWhitelisted = await db.get('SELECT * FROM whitelist WHERE userId = ?', [user.id]);
+
+        if (!isWhitelisted) {
+            return interaction.reply({ content: 'You are not authorized to use this command.', ephemeral: true });
+        }
+
+        const randomApi = apiUrls[Math.floor(Math.random() * apiUrls.length)];
         const response = await axios.get(randomApi);
-        const gifUrl = response.data.link;
+        const gifUrl = response.data.link; 
 
         const embed = new EmbedBuilder()
             .setColor('#7289DA')
             .setImage(gifUrl);
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
-    } catch (error) {
-      console.error('Error idk:', error);
-      await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
        }
     } else if (commandName === 'ticket-panel') {
      const targetChannel = options.getChannel('channel');
@@ -590,6 +623,7 @@ async function handleTicketCreation(interaction) {
   const ticketChannel = await guild.channels.create({
     name: ticketChannelName,
     type: ChannelType.GuildText,
+    parent: TICKET_CATEGORY,
     permissionOverwrites: [
       {
         id: guild.roles.everyone,
@@ -609,9 +643,9 @@ async function handleTicketCreation(interaction) {
     const embed = new EmbedBuilder()
       .setColor(0x00AE86)
       .setTitle('Ticket Created')
-      .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`)
+      .setDescription(`Ticket created by ${user.username} Support will be with you shortly or you can mention one them.`)
       .setFooter({
-        text: 'Botman the justice her | Powered By: @nozcy.int',
+        text: 'Botman the justice hero | Powered By: @nozcy.int',
         iconURL: client.user.displayAvatarURL({ dynamic: true })
       });
 

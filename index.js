@@ -281,7 +281,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName('special-thing')
     .setDescription('Somthing Special:>')
-    .toJSON()
+    .toJSON(),
 ];
 
 (async () => {

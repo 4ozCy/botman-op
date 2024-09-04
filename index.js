@@ -111,6 +111,14 @@ const client = new Client({
 
 const WHITELISTED_IDS = ['1107744228773220473', '1072839015079870494'];
 
+const apiUrls = [
+  'https://purrbot.site/api/img/nsfw/solo/gif',
+  'https://purrbot.site/api/img/nsfw/anal/gif',
+  'https://purrbot.site/api/img/nsfw/pussylick/gif',
+  'https://purrbot.site/api/img/nsfw/yuri/gif',
+  'https://purrbot.site/api/img/nsfw/fuck/gif'
+  ];
+
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
@@ -298,6 +306,16 @@ client.on('interactionCreate', async interaction => {
     handleCommand(interaction);
   } else if (interaction.isButton() || interaction.isSelectMenu()) {
     handleTicketCreation(interaction);
+  }
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.mentions.has(client.user) && message.content.toLowerCase().includes('close')) {
+    const channel = message.channel;
+    await channel.send('Closing ticket...');
+    setTimeout(async () => {
+      await channel.delete();
+    }, 5000);
   }
 });
 
@@ -503,15 +521,15 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
     }
 
     try {
-      const response = await axios.get('https://purrbot.site/api/img/nsfw/fuck/gif');
-      const gifUrl = response.data.link;
+      const randomApi = apiUrls[Math.floor(Math.random() * apiUrls.length)];
+        const response = await axios.get(randomApi);
+        const gifUrl = response.data.link;
 
-      const embed = new EmbedBuilder()
-        .setColor('#FF69B4')
-        .setTitle('somthing special')
-        .setImage(gifUrl);
+        const embed = new EmbedBuilder()
+            .setColor('#7289DA')
+            .setImage(gifUrl);
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
       console.error('Error idk:', error);
       await interaction.reply({ content: 'Failed to do anything', ephemeral: true });
@@ -526,8 +544,8 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
       .setTitle('Ticket')
       .setDescription(customMessage)
       .setFooter({
-        text: 'Powered By: @nozcy.',
-        iconURL: client.user.displayAvatarURL({ dynamic: true, size: 16 })
+        text: 'Botman the justice hero | Powered By: @nozcy.',
+        iconURL: client.user.displayAvatarURL({ dynamic: true })
       });
 
     let row;
@@ -560,14 +578,11 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 async function handleButton(interaction) {
   const guild = interaction.guild;
   const user = interaction.user;
-  const channel = interaction.channel;
-  let ticketChannelName;
 
   if (interaction.customId === 'create_ticket_button' || interaction.customId === 'create_ticket_select') {
+    let ticketChannelName = `ticket-${user.username}`;
 
-    if (interaction.customId === 'create_ticket_button') {
-      ticketChannelName = `ticket-${user.username}`;
-    } else if (interaction.customId === 'create_ticket_select') {
+    if (interaction.customId === 'create_ticket_select') {
       const reason = interaction.values[0];
       ticketChannelName = `ticket-${reason}-${user.username}`;
     }
@@ -575,6 +590,7 @@ async function handleButton(interaction) {
     const ticketChannel = await guild.channels.create({
       name: ticketChannelName,
       type: ChannelType.GuildText,
+      parent: TICKET_CATEGORY_ID,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,
@@ -596,26 +612,15 @@ async function handleButton(interaction) {
       .setTitle('Ticket Created')
       .setDescription(`Ticket created by ${user.username}. Support will be with you shortly.`)
       .setFooter({
-        text: 'Powered By: @nozcy.',
-        iconURL: client.user.displayAvatarURL({ dynamic: true })
+        text: 'Powered By: @nozcy. | Credit to him',
       });
 
-    const closeButton = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('close_ticket')
-        .setLabel('Close Ticket')
-        .setStyle(ButtonStyle.Danger)
-    );
+    await ticketChannel.send({ embeds: [embed] });
 
-    await ticketChannel.send({ embeds: [embed], components: [closeButton] });
+    const notificationMessage = `A new ticket has been created: ${ticketChannel} by ${user}`;
+    await interaction.channel.send(notificationMessage);
+
     await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
-  } else if (interaction.customId === 'close_ticket') {
-    const channel = interaction.channel;
-
-    await interaction.reply({ content: 'Closing ticket...', ephemeral: true });
-    setTimeout(async () => {
-      await channel.delete();
-    }, 5000);
   }
 }
   

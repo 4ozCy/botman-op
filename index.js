@@ -210,7 +210,7 @@ const commands = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName('warnings')
-    .setDescription('Check a user\'s warning count')
+    .setDescription('Check a users warning count')
     .addUserOption(option =>
       option.setName('user')
         .setDescription('The user to check')
@@ -272,13 +272,11 @@ const commands = [
             .setName('add')
             .setDescription('Add a user to the whitelist')
             .addUserOption(option => option.setName('user').setDescription('The user to add').setRequired(true))
-      )
     .addSubcommand(subcommand =>
         subcommand
             .setName('remove')
             .setDescription('Remove a user from the whitelist')
             .addUserOption(option => option.setName('user').setDescription('The user to remove').setRequired(true))
-      )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('special-thing')
@@ -308,18 +306,8 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('messageCreate', async (message) => {
-  if (message.mentions.has(client.user) && message.content.toLowerCase().includes('close')) {
-    const channel = message.channel;
-    await channel.send('Closing ticket...');
-    setTimeout(async () => {
-      await channel.delete();
-    }, 5000);
-  }
-});
-
 async function handleCommand(interaction) {
-  const { commandName, options, user, guild, channel } = interaction;
+  const { commandName, options, user, guild } = interaction;
 
   if (commandName === 'kick') {
     const user = options.getUser('user');

@@ -327,7 +327,7 @@ async function startRequests(channel) {
             console.error('Error making request:', error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 4000));
     }
 }
 
@@ -339,13 +339,13 @@ function stopRequests(channel) {
 client.on('messageCreate', async message => {
     if (message.channel.id !== TARGET_CHANNEL_ID) return;
 
-    if (message.content.toLowerCase().includes('botman start')) {
+    if (message.content.toLowerCase().includes('start')) {
         if (!isRequesting) {
             startRequests(message.channel);
         } else {
             message.channel.send('Requests are already running.');
         }
-    } else if (message.content.toLowerCase().includes('botman stop')) {
+    } else if (message.content.toLowerCase().includes('stop')) {
         if (isRequesting) {
             stopRequests(message.channel);
         } else {

@@ -281,11 +281,11 @@ const commands = [
   new SlashCommandBuilder()
     .setName('special-thing')
     .setDescription('Somthing Special:>')
-    .toJSON(),
+    .toJSON()
 ];
 
 (async () => {
-  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+  const rest = new REST({ version: '11' }).setToken(process.env.TOKEN);
 
   try {
     await rest.put(

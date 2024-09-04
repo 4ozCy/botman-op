@@ -282,10 +282,10 @@ const commands = [
     .setName('special-thing')
     .setDescription('Somthing Special:>')
     .toJSON(),
-    ];
+];
 
 (async () => {
-  const rest = new REST({ version: '11' }).setToken(process.env.TOKEN);
+  const rest = new REST().setToken(process.env.TOKEN);
 
   try {
     await rest.put(
@@ -541,3 +541,4 @@ app.listen(port, () => {
 });
 
 client.login(process.env.TOKEN);
+// made by 4ozCy.int

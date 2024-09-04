@@ -653,9 +653,13 @@ async function handleTicketCreation(interaction) {
 
     await ticketChannel.send({ embeds: [embed] });
 
-    const notificationMessage = `A new ticket has been created: ${ticketChannel} by ${user}`;
-    await interaction.channel.send(notificationMessage);
+const notificationMessage = `A new ticket has been created: ${ticketChannel} by ${user}`;
+const message = await interaction.channel.send(notificationMessage);
 
+setTimeout(() => {
+    message.delete().catch(console.error);
+}, 4000);
+  
     await interaction.reply({ content: `Ticket created: ${ticketChannel}`, ephemeral: true });
   }
   

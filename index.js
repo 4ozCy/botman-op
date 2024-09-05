@@ -252,6 +252,18 @@ const commands = [
     .setName('get-guilds')
     .setDescription('Get the number of guilds the user is in')
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('nickname')
+    .setDescription('Change a user\'s nickname.')
+    .addUserOption(option =>
+      option.setName('user')
+        .setDescription('The user to change nickname')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('nickname')
+        .setDescription('The new nickname')
+        .setRequired(true))
+    .toJSON(),
 ];
 
 (async () => {
@@ -539,6 +551,24 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
+    
+  } else if (commandName === 'nickname') {
+    const targetUser = options.getUser('user');
+    const newNickname = options.getString('nickname');
+
+    const targetMember = interaction.guild.members.cache.get(targetUser.id);
+
+    if (member.permissions.has(PermissionsBitField.Flags.ManageNicknames) || member.id === interaction.guild.ownerId) {
+      try {
+        await targetMember.setNickname(newNickname);
+        await interaction.reply({ content: `Changed nickname for ${targetUser.tag} to ${newNickname}.`, ephemeral: true });
+      } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'Unable to change the nickname.', ephemeral: true });
+      }
+    } else {
+      await interaction.reply({ content: 'You do not have permission to change nicknames.', ephemeral: true });
+    
   } else if (commandName === 'get-guilds') {
 db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row) => {
         if (err) {

@@ -289,7 +289,8 @@ async function startRequests(channel, type) {
                 ? [
                     'https://nekobot.xyz/api/image?type=pussy',
                     'https://nekobot.xyz/api/image?type=boobs',
-                    'https://nekobot.xyz/api/image?type=ass'
+                    'https://nekobot.xyz/api/image?type=ass',
+                    'https://nekobot.xyz/api/image?type=anal'
                   ]
                 : [
                     'https://purrbot.site/api/img/nsfw/fuck/gif',
@@ -301,7 +302,11 @@ async function startRequests(channel, type) {
                     'https://nekobot.xyz/api/image?type=hentai',
                     'https://nekobot.xyz/api/image?type=hboobs',
                     'https://nekobot.xyz/api/image?type=hentai_anal',
-                    'https://api.waifu.pics/nsfw/waifu'
+                    'https://api.waifu.pics/nsfw/waifu',
+                    'https://purrbot.site/api/img/nsfw/threesome_mmf/gif',
+                    'https://purrbot.site/api/img/nsfw/threesome_ffm/gif',
+                    'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
+                    'https://purrbot.site/api/img/nsfw/cum/gif/'
                   ];
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];

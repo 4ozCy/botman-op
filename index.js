@@ -268,7 +268,7 @@ const commands = [
   }
 })();
 
-const TARGET_CHANNEL_ID = '1280962423553265785';
+const REAL_LIFE = '1280962423553265785';
 let isRequesting = false;
 
 async function startRequests(channel) {
@@ -279,7 +279,8 @@ async function startRequests(channel) {
         try {
             const apiUrls = [
                 'https://nekobot.xyz/api/image?type=pussy',
-                'https://nekobot.xyz/api/image?type=boobs'
+                'https://nekobot.xyz/api/image?type=boobs',
+                'https://nekobot.xyz/api/image?type=ass'
             ];
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
 
@@ -287,7 +288,7 @@ async function startRequests(channel) {
             const gifUrl = response.data.message;
 
             const embed = new EmbedBuilder()
-                .setTitle('🔞🔞🔞🔞🔞🔞🔞🔞🔞')
+                .setTitle('Real life')
                 .setColor('#FF69B4')
                 .setImage(gifUrl);
                 
@@ -296,7 +297,7 @@ async function startRequests(channel) {
             console.error('Error making request:', error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 6000));
+        await new Promise(resolve => setTimeout(resolve, 11000));
     }
 }
 
@@ -306,7 +307,70 @@ function stopRequests(channel) {
 }
 
 client.on('messageCreate', async message => {
-    if (message.channel.id !== TARGET_CHANNEL_ID) return;
+    if (message.channel.id !== REAL_LIFE) return;
+
+    if (message.content.toLowerCase().includes('start')) {
+        if (!isRequesting) {
+            startRequests(message.channel);
+        } else {
+            message.channel.send('Requests are already running.');
+        }
+    } else if (message.content.toLowerCase().includes('stop')) {
+        if (isRequesting) {
+            stopRequests(message.channel);
+        } else {
+            message.channel.send('Requests are not running.');
+        }
+    }
+});
+
+const HENTAI = '1280962423553265785';
+let isRequesting = false;
+
+async function startRequests(channel) {
+    isRequesting = true;
+    channel.send('Started making requests.');
+
+    while (isRequesting) {
+        try {
+            const apiUrls = [
+                'https://purrbot.site/api/img/nsfw/fuck/gif',
+                'https://purrbot.site/api/img/nsfw/anal/gif',
+                'https://purrbot.site/api/img/nsfw/pussylick/gif',
+                'https://purrbot.site/api/img/nsfw/yuri/gif',
+                'https://nekobot.xyz/api/image?type=hass',
+                'https://nekobot.xyz/api/image?type=hyuri',
+                'https://nekobot.xyz/api/image?type=hentai',
+                'https://nekobot.xyz/api/image?type=hboobs',
+                'https://nekobot.xyz/api/image?type=hentai_anal'
+            ];
+            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
+
+            const response = await axios.get(randomApiUrl);
+            const gifUrl = response.data.message;
+            const gifUrl = response.data.link;
+
+            const embed = new EmbedBuilder()
+                .setTitle('Hentai')
+                .setColor('#FF69B4')
+                .setImage(gifUrl);
+                
+            await channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error('Error making request:', error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 11000));
+    }
+}
+
+function stopRequests(channel) {
+    isRequesting = false;
+    channel.send('Stopped making requests.');
+}
+
+client.on('messageCreate', async message => {
+    if (message.channel.id !== HENTAI) return;
 
     if (message.content.toLowerCase().includes('start')) {
         if (!isRequesting) {

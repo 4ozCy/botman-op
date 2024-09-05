@@ -278,19 +278,8 @@ async function startRequests(channel) {
     while (isRequesting) {
         try {
             const apiUrls = [
-                'https://purrbot.site/api/img/nsfw/fuck/gif',
-                'https://purrbot.site/api/img/nsfw/anal/gif',
-                'https://purrbot.site/api/img/nsfw/pussylick/gif',
-                'https://purrbot.site/api/img/nsfw/yuri/gif',
-                'https://nekobot.xyz/api/image?type=ass',
-                'https://nekobot.xyz/api/image?type=hass',
-                'https://nekobot.xyz/api/image?type=hyuri',
-                'https://nekobot.xyz/api/image?type=hentai',
-                'https://nekobot.xyz/api/image?type=hboobs',
                 'https://nekobot.xyz/api/image?type=pussy',
-                'https://nekobot.xyz/api/image?type=boobs',
-                'https://nekobot.xyz/api/image?type=anal',
-                'https://nekobot.xyz/api/image?type=hentai_anal'
+                'https://nekobot.xyz/api/image?type=boobs'
             ];
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
 

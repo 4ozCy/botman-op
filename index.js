@@ -568,7 +568,7 @@ async function handleCommand(interaction) {
       }
     } else {
       await interaction.reply({ content: 'You do not have permission to change nicknames.', ephemeral: true });
-    
+     }
   } else if (commandName === 'get-guilds') {
 db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row) => {
         if (err) {

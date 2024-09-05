@@ -255,7 +255,7 @@ const commands = [
 ];
 
 (async () => {
-  const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
+  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
   try {
     await rest.put(
@@ -296,7 +296,7 @@ async function startRequests(channel) {
             console.error('Error making request:', error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        await new Promise(resolve => setTimeout(resolve, 6000));
     }
 }
 

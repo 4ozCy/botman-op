@@ -306,7 +306,8 @@ async function startRequests(channel, type) {
                     'https://purrbot.site/api/img/nsfw/threesome_mmf/gif',
                     'https://purrbot.site/api/img/nsfw/threesome_ffm/gif',
                     'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
-                    'https://purrbot.site/api/img/nsfw/cum/gif/'
+                    'https://purrbot.site/api/img/nsfw/cum/gif/',
+                    'https://nekobot.xyz/api/image?type=hmidriff'
                   ];
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];

@@ -300,7 +300,8 @@ async function startRequests(channel, type) {
                     'https://nekobot.xyz/api/image?type=hyuri',
                     'https://nekobot.xyz/api/image?type=hentai',
                     'https://nekobot.xyz/api/image?type=hboobs',
-                    'https://nekobot.xyz/api/image?type=hentai_anal'
+                    'https://nekobot.xyz/api/image?type=hentai_anal',
+                    'https://api.waifu.pics/nsfw/waifu'
                   ];
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];

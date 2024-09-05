@@ -287,6 +287,7 @@ async function startRequests(channel) {
             const gifUrl = response.data.link;
 
             const embed = new EmbedBuilder()
+                .setTitle('🔞🔞🔞🔞🔞🔞🔞🔞🔞')
                 .setColor('#FF69B4')
                 .setImage(gifUrl);
                 

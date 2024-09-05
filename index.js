@@ -269,92 +269,49 @@ const commands = [
 })();
 
 const REAL_LIFE = '1280962423553265785';
-let isRequesting = false;
-
-async function startRequests(channel) {
-    isRequesting = true;
-    channel.send('Started making requests.');
-
-    while (isRequesting) {
-        try {
-            const apiUrls = [
-                'https://nekobot.xyz/api/image?type=pussy',
-                'https://nekobot.xyz/api/image?type=boobs',
-                'https://nekobot.xyz/api/image?type=ass'
-            ];
-            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
-
-            const response = await axios.get(randomApiUrl);
-            const gifUrl = response.data.message;
-
-            const embed = new EmbedBuilder()
-                .setTitle('Real life')
-                .setColor('#FF69B4')
-                .setImage(gifUrl);
-                
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error('Error making request:', error);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 11000));
-    }
-}
-
-function stopRequests(channel) {
-    isRequesting = false;
-    channel.send('Stopped making requests.');
-}
-
-client.on('messageCreate', async message => {
-    if (message.channel.id !== REAL_LIFE) return;
-
-    if (message.content.toLowerCase().includes('start')) {
-        if (!isRequesting) {
-            startRequests(message.channel);
-        } else {
-            message.channel.send('Requests are already running.');
-        }
-    } else if (message.content.toLowerCase().includes('stop')) {
-        if (isRequesting) {
-            stopRequests(message.channel);
-        } else {
-            message.channel.send('Requests are not running.');
-        }
-    }
-});
-
 const HENTAI = '1281186733941325855';
-let isRequesting = false;
 
-async function startRequests(channel) {
-    isRequesting = true;
+let isRequestingRealLife = false;
+let isRequestingHentai = false;
+
+async function startRequests(channel, type) {
+    if (type === 'realLife') {
+        isRequestingRealLife = true;
+    } else if (type === 'hentai') {
+        isRequestingHentai = true;
+    }
+
     channel.send('Started making requests.');
 
-    while (isRequesting) {
+    while ((type === 'realLife' ? isRequestingRealLife : isRequestingHentai)) {
         try {
-            const apiUrls = [
-                'https://purrbot.site/api/img/nsfw/fuck/gif',
-                'https://purrbot.site/api/img/nsfw/anal/gif',
-                'https://purrbot.site/api/img/nsfw/pussylick/gif',
-                'https://purrbot.site/api/img/nsfw/yuri/gif',
-                'https://nekobot.xyz/api/image?type=hass',
-                'https://nekobot.xyz/api/image?type=hyuri',
-                'https://nekobot.xyz/api/image?type=hentai',
-                'https://nekobot.xyz/api/image?type=hboobs',
-                'https://nekobot.xyz/api/image?type=hentai_anal'
-            ];
-            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
+            const apiUrls = type === 'realLife'
+                ? [
+                    'https://nekobot.xyz/api/image?type=pussy',
+                    'https://nekobot.xyz/api/image?type=boobs',
+                    'https://nekobot.xyz/api/image?type=ass'
+                  ]
+                : [
+                    'https://purrbot.site/api/img/nsfw/fuck/gif',
+                    'https://purrbot.site/api/img/nsfw/anal/gif',
+                    'https://purrbot.site/api/img/nsfw/pussylick/gif',
+                    'https://purrbot.site/api/img/nsfw/yuri/gif',
+                    'https://nekobot.xyz/api/image?type=hass',
+                    'https://nekobot.xyz/api/image?type=hyuri',
+                    'https://nekobot.xyz/api/image?type=hentai',
+                    'https://nekobot.xyz/api/image?type=hboobs',
+                    'https://nekobot.xyz/api/image?type=hentai_anal'
+                  ];
 
+            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
             const response = await axios.get(randomApiUrl);
-            const gifUrl = response.data.message;
-            const gifUrl = response.data.link;
+            const gifUrl = response.data.message || response.data.link;
 
             const embed = new EmbedBuilder()
-                .setTitle('Hentai')
+                .setTitle(type === 'realLife' ? 'Real life' : 'Hentai')
                 .setColor('#FF69B4')
                 .setImage(gifUrl);
-                
+
             await channel.send({ embeds: [embed] });
         } catch (error) {
             console.error('Error making request:', error);
@@ -364,25 +321,44 @@ async function startRequests(channel) {
     }
 }
 
-function stopRequests(channel) {
-    isRequesting = false;
+function stopRequests(type, channel) {
+    if (type === 'realLife') {
+        isRequestingRealLife = false;
+    } else if (type === 'hentai') {
+        isRequestingHentai = false;
+    }
+
     channel.send('Stopped making requests.');
 }
 
 client.on('messageCreate', async message => {
-    if (message.channel.id !== HENTAI) return;
-
-    if (message.content.toLowerCase().includes('start')) {
-        if (!isRequesting) {
-            startRequests(message.channel);
-        } else {
-            message.channel.send('Requests are already running.');
+    if (message.channel.id === REAL_LIFE) {
+        if (message.content.toLowerCase().includes('start')) {
+            if (!isRequestingRealLife) {
+                startRequests(message.channel, 'realLife');
+            } else {
+                message.channel.send('Requests are already running.');
+            }
+        } else if (message.content.toLowerCase().includes('stop')) {
+            if (isRequestingRealLife) {
+                stopRequests('realLife', message.channel);
+            } else {
+                message.channel.send('Requests are not running.');
+            }
         }
-    } else if (message.content.toLowerCase().includes('stop')) {
-        if (isRequesting) {
-            stopRequests(message.channel);
-        } else {
-            message.channel.send('Requests are not running.');
+    } else if (message.channel.id === HENTAI) {
+        if (message.content.toLowerCase().includes('start')) {
+            if (!isRequestingHentai) {
+                startRequests(message.channel, 'hentai');
+            } else {
+                message.channel.send('Requests are already running.');
+            }
+        } else if (message.content.toLowerCase().includes('stop')) {
+            if (isRequestingHentai) {
+                stopRequests('hentai', message.channel);
+            } else {
+                message.channel.send('Requests are not running.');
+            }
         }
     }
 });

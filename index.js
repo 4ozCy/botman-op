@@ -324,7 +324,7 @@ client.on('messageCreate', async message => {
     }
 });
 
-const HENTAI = '1280962423553265785';
+const HENTAI = '1281186733941325855';
 let isRequesting = false;
 
 async function startRequests(channel) {

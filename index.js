@@ -284,7 +284,7 @@ async function startRequests(channel) {
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
 
             const response = await axios.get(randomApiUrl);
-            const gifUrl = response.data.link;
+            const gifUrl = response.data.message;
 
             const embed = new EmbedBuilder()
                 .setTitle('🔞🔞🔞🔞🔞🔞🔞🔞🔞')

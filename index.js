@@ -109,6 +109,12 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
+const configuration = new Configuration({
+  apiKey: process.env.API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+
 const ownerId = '1107744228773220473';
 
 db.run(`CREATE TABLE IF NOT EXISTS users (

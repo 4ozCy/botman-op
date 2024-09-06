@@ -271,24 +271,6 @@ const commands = [
         .setDescription('The new nickname')
         .setRequired(true))
     .toJSON(),
-  new SlashCommandBuilder()
-    .setName('generate-code')
-    .setDescription('Generates code based on a prompt using GPT-3.5')
-    .addStringOption(option =>
-      option.setName('language')
-        .setDescription('Choose the programming language')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Python', value: 'python' },
-          { name: 'JavaScript', value: 'javascript' },
-          { name: 'Java', value: 'java' },
-          { name: 'Lua', value: 'lua' }
-        ))
-    .addStringOption(option =>
-      option.setName('prompt')
-        .setDescription('Enter the prompt or code description')
-        .setRequired(true))
-    .toJSON(),
 ];
 
 (async () => {
@@ -304,6 +286,8 @@ const commands = [
     console.error('Error registering application commands:', error);
   }
 })();
+
+const CHATGPT_CHANNEL = '1281637504860291073';
 
 const REAL_LIFE = '1280962423553265785';
 const HENTAI = '1281186733941325855';
@@ -415,6 +399,29 @@ client.on('messageCreate', async message => {
             }
         }
     }
+});
+
+client.on('messageCreate', async message => {
+  if (message.author.bot || message.channel.id !== CHATGPT_CHANNEL) return;
+
+  const userMessage = message.content;
+
+  try {
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: userMessage }
+      ],
+      max_tokens: 200
+    });
+
+    const aiResponse = completion.data.choices[0].message.content.trim();
+    await message.reply(aiResponse);
+  } catch (error) {
+    console.error('Error with OpenAI GPT-4:', error);
+    await message.reply('Sorry, I am unable to process your request at the moment.');
+  }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -586,31 +593,7 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
-
-  } else if (commandName === 'generate-code') {
-    const language = options.getString('language');
-    const prompt = options.getString('prompt');
-
-    try {
-      const response = await openai.createCompletion({
-        model: 'gpt-3.5-turbo',
-        prompt: `Generate a ${language} code snippet for the following task: ${prompt}`,
-        max_tokens: 150,
-      });
-
-      const generatedCode = response.data.choices[0].text.trim();
-
-      const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setTitle(`Generated ${language.toUpperCase()} Code`)
-        .setDescription(`\`\`\`${language}\n${generatedCode}\n\`\`\``)
-        .setTimestamp();
-
-      await interaction.reply({ embeds: [embed] });
-    } catch (error) {
-      console.error('Error generating code with GPT-3.5:', error);
-      await interaction.reply({ content: 'Failed to generate code. Please try again later.', ephemeral: true });
-      }
+    
   } else if (commandName === 'nickname') {
     const targetUser = options.getUser('user');
     const newNickname = options.getString('nickname');

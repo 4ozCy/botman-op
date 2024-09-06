@@ -325,14 +325,12 @@ async function startRequests(channel, type) {
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
             const response = await axios.get(randomApiUrl);
-
-            let gifUrl;
+             let gifUrl;
             if (randomApiUrl.includes('gelbooru.com')) {
                 gifUrl = response.data.post[0].file_url;
             } else {
                 gifUrl = response.data.message || response.data.link;
             }
-
             const embed = new EmbedBuilder()
                 .setTitle(type === 'realLife' ? 'Real life' : 'Hentai')
                 .setColor('#FF69B4')
@@ -355,7 +353,39 @@ function stopRequests(type, channel) {
     }
 
     channel.send('Stopped making requests.');
-                  }
+}
+
+client.on('messageCreate', async message => {
+    if (message.channel.id === REAL_LIFE) {
+        if (message.content.toLowerCase().includes('start')) {
+            if (!isRequestingRealLife) {
+                startRequests(message.channel, 'realLife');
+            } else {
+                message.channel.send('Requests are already running.');
+            }
+        } else if (message.content.toLowerCase().includes('stop')) {
+            if (isRequestingRealLife) {
+                stopRequests('realLife', message.channel);
+            } else {
+                message.channel.send('Requests are not running.');
+            }
+        }
+    } else if (message.channel.id === HENTAI) {
+        if (message.content.toLowerCase().includes('start')) {
+            if (!isRequestingHentai) {
+                startRequests(message.channel, 'hentai');
+            } else {
+                message.channel.send('Requests are already running.');
+            }
+        } else if (message.content.toLowerCase().includes('stop')) {
+            if (isRequestingHentai) {
+                stopRequests('hentai', message.channel);
+            } else {
+                message.channel.send('Requests are not running.');
+            }
+        }
+    }
+});
 
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {

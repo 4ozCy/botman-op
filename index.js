@@ -264,6 +264,24 @@ const commands = [
         .setDescription('The new nickname')
         .setRequired(true))
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('generate-code')
+    .setDescription('Generates code based on a prompt using GPT-3.5')
+    .addStringOption(option =>
+      option.setName('language')
+        .setDescription('Choose the programming language')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Python', value: 'python' },
+          { name: 'JavaScript', value: 'javascript' },
+          { name: 'Java', value: 'java' },
+          { name: 'Lua', value: 'lua' }
+        ))
+    .addStringOption(option =>
+      option.setName('prompt')
+        .setDescription('Enter the prompt or code description')
+        .setRequired(true))
+    .toJSON(),
 ];
 
 (async () => {
@@ -561,7 +579,31 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
-    
+
+  } else if (commandName === 'generate-code') {
+    const language = options.getString('language');
+    const prompt = options.getString('prompt');
+
+    try {
+      const response = await openai.createCompletion({
+        model: 'gpt-3.5-turbo',
+        prompt: `Generate a ${language} code snippet for the following task: ${prompt}`,
+        max_tokens: 150,
+      });
+
+      const generatedCode = response.data.choices[0].text.trim();
+
+      const embed = new EmbedBuilder()
+        .setColor('#0099ff')
+        .setTitle(`Generated ${language.toUpperCase()} Code`)
+        .setDescription(`\`\`\`${language}\n${generatedCode}\n\`\`\``)
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed] });
+    } catch (error) {
+      console.error('Error generating code with GPT-3.5:', error);
+      await interaction.reply({ content: 'Failed to generate code. Please try again later.', ephemeral: true });
+      }
   } else if (commandName === 'nickname') {
     const targetUser = options.getUser('user');
     const newNickname = options.getString('nickname');

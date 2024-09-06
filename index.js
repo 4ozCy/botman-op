@@ -10,6 +10,7 @@ const axios = require('axios');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 
 app.use(session({

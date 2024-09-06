@@ -319,88 +319,6 @@ async function startRequests(channel, type) {
                     'https://purrbot.site/api/img/nsfw/threesome_ffm/gif',
                     'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
                     'https://purrbot.site/api/img/nsfw/cum/gif/',
-                    'https://nekobot.xyz/api/image?type=hmidriff'
-                  ];
-
-            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
-            const response = await axios.get(randomApiUrl);
-            const gifUrl = response.data.message || response.data.link;
-
-            const embed = new EmbedBuilder()
-                .setTitle(type === 'realLife' ? 'Real life' : 'Hentai')
-                .setColor('#FF69B4')
-                .setImage(gifUrl);
-
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error('Error making request:', error);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 11000));
-    }
-}
-
-function stopRequests(type, channel) {
-    if (type === 'realLife') {
-        isRequestingRealLife = false;
-    } else if (type === 'hentai') {
-        isRequestingHentai = false;
-    }
-
-    channel.send('Stopped making requests.');
-}
-
-client.on('messageCreate', async message => {
-    if (message.channel.id === REAL_LIFE) {
-        if (message.content.toLowerCase().includes('start')) {
-            if (!isRequestingRealLife) {
-                startRequests(message.channel, 'realLife');
-            } else {
-                message.channel.send('Requests are already running.');
-            }
-        } else if (message.content.toLowerCase().includes('stop')) {
-            if (isRequestingRealLife) {
-                stopRequests('realLife', message.channel);
-            } else {
-const REAL_LIFE = '1280962423553265785';
-const HENTAI = '1281186733941325855';
-
-let isRequestingRealLife = false;
-let isRequestingHentai = false;
-
-async function startRequests(channel, type) {
-    if (type === 'realLife') {
-        isRequestingRealLife = true;
-    } else if (type === 'hentai') {
-        isRequestingHentai = true;
-    }
-
-    channel.send('Started making requests.');
-
-    while ((type === 'realLife' ? isRequestingRealLife : isRequestingHentai)) {
-        try {
-            const apiUrls = type === 'realLife'
-                ? [
-                    'https://nekobot.xyz/api/image?type=pussy',
-                    'https://nekobot.xyz/api/image?type=boobs',
-                    'https://nekobot.xyz/api/image?type=ass',
-                    'https://nekobot.xyz/api/image?type=anal'
-                  ]
-                : [
-                    'https://purrbot.site/api/img/nsfw/fuck/gif',
-                    'https://purrbot.site/api/img/nsfw/anal/gif',
-                    'https://purrbot.site/api/img/nsfw/pussylick/gif',
-                    'https://purrbot.site/api/img/nsfw/yuri/gif',
-                    'https://nekobot.xyz/api/image?type=hass',
-                    'https://nekobot.xyz/api/image?type=hyuri',
-                    'https://nekobot.xyz/api/image?type=hentai',
-                    'https://nekobot.xyz/api/image?type=hboobs',
-                    'https://nekobot.xyz/api/image?type=hentai_anal',
-                    'https://api.waifu.pics/nsfw/waifu',
-                    'https://purrbot.site/api/img/nsfw/threesome_mmf/gif',
-                    'https://purrbot.site/api/img/nsfw/threesome_ffm/gif',
-                    'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
-                    'https://purrbot.site/api/img/nsfw/cum/gif/',
                     'https://nekobot.xyz/api/image?type=hmidriff',
                     'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=hentai&limit=1'
                   ];
@@ -425,7 +343,6 @@ async function startRequests(channel, type) {
             console.error('Error making request:', error);
         }
 
-        // Delay between requests
         await new Promise(resolve => setTimeout(resolve, 11000));
     }
 }
@@ -438,7 +355,7 @@ function stopRequests(type, channel) {
     }
 
     channel.send('Stopped making requests.');
-    }
+                  }
 
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {

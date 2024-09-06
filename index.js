@@ -10,7 +10,6 @@ const axios = require('axios');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
-const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 
 app.use(session({
@@ -109,12 +108,6 @@ const client = new Client({
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
-
-const configuration = new Configuration({
-  apiKey: process.env.API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
 
 const ownerId = '1107744228773220473';
 
@@ -260,15 +253,15 @@ const commands = [
     .setDescription('Get the number of guilds the user is in')
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('nickname')
-    .setDescription('Change a user\'s nickname.')
+    .setName('anon-msg')
+    .setDescription('Send an anonymous message to a user')
     .addUserOption(option =>
       option.setName('user')
-        .setDescription('The user to change nickname')
+        .setDescription('The user to send the message to')
         .setRequired(true))
     .addStringOption(option =>
-      option.setName('nickname')
-        .setDescription('The new nickname')
+      option.setName('message')
+        .setDescription('The anonymous message')
         .setRequired(true))
     .toJSON(),
 ];
@@ -399,29 +392,6 @@ client.on('messageCreate', async message => {
             }
         }
     }
-});
-
-client.on('messageCreate', async message => {
-  if (message.author.bot || message.channel.id !== CHATGPT_CHANNEL) return;
-
-  const userMessage = message.content;
-
-  try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant.' },
-        { role: 'user', content: userMessage }
-      ],
-      max_tokens: 200
-    });
-
-    const aiResponse = completion.data.choices[0].message.content.trim();
-    await message.reply(aiResponse);
-  } catch (error) {
-    console.error('Error with OpenAI GPT-4:', error);
-    await message.reply('Sorry, I am unable to process your request at the moment.');
-  }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -593,23 +563,20 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
-    
-  } else if (commandName === 'nickname') {
-    const targetUser = options.getUser('user');
-    const newNickname = options.getString('nickname');
 
-    const targetMember = interaction.guild.members.cache.get(targetUser.id);
+  } else  if (commandName === 'anon-msg') {
+    const targetUser = interaction.options.getUser('user');
+    const anonymousMessage = interaction.options.getString('message');
 
-    if (member.permissions.has(PermissionsBitField.Flags.ManageNicknames) || member.id === interaction.guild.ownerId) {
-      try {
-        await targetMember.setNickname(newNickname);
-        await interaction.reply({ content: `Changed nickname for ${targetUser.tag} to ${newNickname}.`, ephemeral: true });
-      } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'Unable to change the nickname.', ephemeral: true });
+    try {
+      if (anonymousMessage) {
+        await targetUser.send(`You have received an anonymous message:\n\n${anonymousMessage}`);
       }
-    } else {
-      await interaction.reply({ content: 'You do not have permission to change nicknames.', ephemeral: true });
+
+      await interaction.reply({ content: `Your anonymous message has been sent to ${targetUser.tag}.`, ephemeral: true });
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({ content: `There was an error sending the message. Please try again.`, ephemeral: true });
      }
   } else if (commandName === 'get-guilds') {
 db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row) => {

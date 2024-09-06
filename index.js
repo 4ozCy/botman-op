@@ -320,14 +320,19 @@ async function startRequests(channel, type) {
                     'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
                     'https://purrbot.site/api/img/nsfw/cum/gif/',
                     'https://nekobot.xyz/api/image?type=hmidriff',
-                    'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=hentai&limit=1'
+                    'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=hentai+animated&limit=1'
                   ];
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
             const response = await axios.get(randomApiUrl);
              let gifUrl;
             if (randomApiUrl.includes('gelbooru.com')) {
-                gifUrl = response.data.post[0].file_url;
+                const post = response.data.post[0];
+                if (post.file_url.endsWith('.gif')) {
+                    gifUrl = post.file_url;
+                } else {
+                    gifUrl = null;
+                }
             } else {
                 gifUrl = response.data.message || response.data.link;
             }
@@ -341,7 +346,7 @@ async function startRequests(channel, type) {
             console.error('Error making request:', error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 11000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
     }
 }
 

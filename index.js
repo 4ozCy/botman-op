@@ -578,7 +578,7 @@ async function handleCommand(interaction) {
     const avatarEmbed = new EmbedBuilder()
       .setColor('#7289DA')
       .setTitle(`${user.tag}'s Avatar`)
-      .setImage(user.displayAvatarURL({ dynamic: true, size: 1024 }))
+      .setImage(user.displayAvatarURL({ dynamic: true, size: 4096 }))
       .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
     
     await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });

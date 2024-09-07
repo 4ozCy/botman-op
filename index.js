@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -8,6 +8,8 @@ const { open } = require('sqlite');
 const port = process.env.PORT || 3000;
 const axios = require('axios');
 const session = require('express-session');
+const ytdl = require('ytdl-core');
+const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -272,6 +274,22 @@ const commands = [
         .setDescription('The user whose avatar you want to see')
         .setRequired(false))
     .toJSON(),
+  new SlashCommandBuilder()
+        .setName('convert')
+        .setDescription('Convert YouTube video to MP3 or MP4')
+        .addStringOption(option => 
+            option.setName('url')
+                .setDescription('The YouTube URL to convert')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('format')
+                .setDescription('Choose format: MP3 or MP4')
+                .setRequired(true)
+                .addChoices(
+                    { name: 'MP3', value: 'mp3' },
+                    { name: 'MP4', value: 'mp4' }
+                ))
+        .toJSON(),
 ];
 
 (async () => {
@@ -582,6 +600,36 @@ async function handleCommand(interaction) {
       .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
     
     await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });
+
+  } else if (commandName === 'convert') {
+        const url = options.getString('url');
+        const format = options.getString('format');
+        
+        if (!ytdl.validateURL(url)) {
+            return interaction.reply({ content: 'Invalid YouTube URL', ephemeral: true });
+        }
+        
+        const videoInfo = await ytdl.getInfo(url);
+        const videoTitle = videoInfo.videoDetails.title;
+        const videoId = videoInfo.videoDetails.videoId;
+
+        const outputPath = path.join(__dirname, `${videoId}.${format}`);
+        
+        interaction.reply({ content: `Downloading and converting ${videoTitle} to ${format.toUpperCase()}...` });
+        
+        const stream = ytdl(url, { quality: 'highestaudio' });
+
+        ffmpeg(stream)
+            .output(outputPath)
+            .on('end', async () => {
+                const attachment = new AttachmentBuilder(outputPath);
+                await interaction.editReply({ content: `${videoTitle} converted to ${format.toUpperCase()}`, files: [attachment] });
+                fs.unlinkSync(outputPath);
+            })
+            .on('error', err => {
+                interaction.editReply({ content: `Error: ${err.message}` });
+            })
+            .run();
 
   } else  if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');

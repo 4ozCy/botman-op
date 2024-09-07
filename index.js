@@ -132,6 +132,8 @@ dbPromise.then(db => {
   )`);
 });
 
+process.env.YTDL_NO_UPDATE = 'true';
+
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
@@ -603,34 +605,43 @@ async function handleCommand(interaction) {
 
   } else if (commandName === 'convert') {
         const url = options.getString('url');
-        const format = options.getString('format');
-        
-        if (!ytdl.validateURL(url)) {
-            return interaction.reply({ content: 'Invalid YouTube URL', ephemeral: true });
-        }
-        
+    const format = options.getString('format');
+
+    if (!ytdl.validateURL(url)) {
+        return interaction.reply({ content: 'Invalid YouTube URL', ephemeral: true });
+    }
+
+    try {
         const videoInfo = await ytdl.getInfo(url);
         const videoTitle = videoInfo.videoDetails.title;
         const videoId = videoInfo.videoDetails.videoId;
 
         const outputPath = path.join(__dirname, `${videoId}.${format}`);
-        
-        interaction.reply({ content: `Downloading and converting ${videoTitle} to ${format.toUpperCase()}...` });
-        
+
+        interaction.reply({ content: `Downloading and converting **${videoTitle}** to **${format.toUpperCase()}**...` });
+
         const stream = ytdl(url, { quality: 'highestaudio' });
 
         ffmpeg(stream)
             .output(outputPath)
             .on('end', async () => {
                 const attachment = new AttachmentBuilder(outputPath);
-                await interaction.editReply({ content: `${videoTitle} converted to ${format.toUpperCase()}`, files: [attachment] });
+                await interaction.editReply({
+                    content: `**${videoTitle}** has been successfully converted to **${format.toUpperCase()}**.`,
+                    files: [attachment]
+                });
                 fs.unlinkSync(outputPath);
             })
             .on('error', err => {
-                interaction.editReply({ content: `Error: ${err.message}` });
+                console.error('ffmpeg error:', err);
+                interaction.editReply({ content: `Error during conversion: ${err.message}` });
             })
             .run();
 
+    } catch (err) {
+        console.error('Error fetching video info:', err);
+        return interaction.reply({ content: `Error fetching video info: ${err.message}`, ephemeral: true });
+      }
   } else  if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');
     const anonymousMessage = interaction.options.getString('message');

@@ -264,6 +264,14 @@ const commands = [
         .setDescription('The anonymous message')
         .setRequired(true))
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('avatar')
+    .setDescription('Fetch the avatar of a user.')
+    .addUserOption(option =>
+      option.setName('user')
+        .setDescription('The user whose avatar you want to see')
+        .setRequired(false))
+    .toJSON(),
 ];
 
 (async () => {
@@ -563,6 +571,17 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
+
+  } else if (commandName === 'avatar') {
+    const user = interaction.options.getUser('user') || interaction.user;
+    
+    const avatarEmbed = new EmbedBuilder()
+      .setColor('#7289DA')
+      .setTitle(`${user.tag}'s Avatar`)
+      .setImage(user.displayAvatarURL({ dynamic: true }))
+      .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
+    
+    await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });
 
   } else  if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');

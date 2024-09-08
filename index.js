@@ -8,6 +8,7 @@ const { open } = require('sqlite');
 const port = process.env.PORT || 3000;
 const axios = require('axios');
 const session = require('express-session');
+const FormData = require('form-data');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -287,6 +288,14 @@ const commands = [
         )
     )
     .toJSON(),
+  new SlashCommandBuilder()
+  .setName('file-hosting')
+  .setDescription('Upload a file to the file hosting server')
+  .addAttachmentOption(option =>
+    option.setName('file')
+      .setDescription('The file to upload')
+      .setRequired(true))
+  .toJSON(),
 ];
 
 (async () => {
@@ -592,8 +601,29 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
+  
+  } else if (commandName === 'file-hosting') {
+    const file = interaction.options.getAttachment('file');
+    const fileUrl = file.url;
 
-  } else if (commandName === 'truthordare') {
+    await interaction.deferReply();
+
+    try {
+      const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+      const formData = new FormData();
+      formData.append('file', response.data, file.name);
+
+      const uploadResponse = await axios.post('http://file-hosting.onrender.com/api/file/hosting', formData, {
+        headers: formData.getHeaders(),
+      });
+
+      const hostedFileUrl = uploadResponse.data.fileUrl;
+      await interaction.editReply(`Your file has been uploaded! You can access it here: ${hostedFileUrl}`);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      await interaction.editReply('There was an error uploading your file. Please try again later.');
+     }
+  } else if (commandName === 'truth-or-dare') {
     const option = interaction.options.getString('type') || 'dare';
     const data = await getTruthOrDare(option);
     const { question, rating } = data;

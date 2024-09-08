@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputStyle, TextInputBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputStyle, TextInputBuilder, InteractionType } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -586,39 +586,35 @@ async function handleCommand(interaction) {
     });
 
   } else if (commandName === 'truth-or-dare') {
-      const option = interaction.options.getString('type');
+    const option = interaction.options.getString('type');
+    const data = await getTruthOrDare(option);
+    const { question } = data;
 
-      const data = await getTruthOrDare(option);
-      const { question } = data;
+    const embed = new EmbedBuilder()
+      .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+      .setDescription(question)
+      .setColor(0x00AE86);
 
-      const embed = new EmbedBuilder()
-        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
-        .setDescription(question)
-        .setColor(0x00AE86);
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('answer')
+        .setLabel('Answer')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('skip')
+        .setLabel('Skip')
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId('stop')
+        .setLabel('Stop')
+        .setStyle(ButtonStyle.Danger)
+    );
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('answer')
-          .setLabel('Answer')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId('skip')
-          .setLabel('Skip')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId('stop')
-          .setLabel('Stop')
-          .setStyle(ButtonStyle.Danger)
-      );
-
-      await interaction.reply({ embeds: [embed], components: [row] });
-    }
+    await interaction.reply({ embeds: [embed], components: [row] });
   }
 
   if (interaction.isButton()) {
-    const customId = interaction.customId;
-
-    if (customId === 'answer') {
+    if (interaction.customId === 'answer') {
       const modal = new ModalBuilder()
         .setCustomId('answer_modal')
         .setTitle('Submit Your Answer');
@@ -635,7 +631,7 @@ async function handleCommand(interaction) {
       await interaction.showModal(modal);
     }
 
-    if (customId === 'skip') {
+    if (interaction.customId === 'skip') {
       const option = interaction.message.embeds[0].title.toLowerCase();
       const data = await getTruthOrDare(option);
       const { question } = data;
@@ -648,7 +644,7 @@ async function handleCommand(interaction) {
       await interaction.update({ embeds: [embed] });
     }
 
-    if (customId === 'stop') {
+    if (interaction.customId === 'stop') {
       await interaction.update({ content: 'Game stopped!', components: [], embeds: [] });
     }
   }
@@ -662,7 +658,7 @@ async function handleCommand(interaction) {
         components: [],
       });
 
-      const option = interaction.message.embeds[0].title.toLowerCase(); // Get the current type (Truth/Dare)
+      const option = interaction.message.embeds[0].title.toLowerCase();
       const data = await getTruthOrDare(option);
       const { question } = data;
 
@@ -687,7 +683,7 @@ async function handleCommand(interaction) {
       );
 
       await interaction.followUp({ embeds: [embed], components: [row] });
-      }
+     }
   } else if (commandName === 'avatar') {
     const user = interaction.options.getUser('user') || interaction.user;
     

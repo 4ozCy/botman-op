@@ -415,6 +415,14 @@ client.on('messageCreate', async message => {
     }
 });
 
+async function getTruthOrDare(type) {
+    const url = type === 'truth' 
+        ? 'https://api.truthordarebot.xyz/v1/truth' 
+        : 'https://api.truthordarebot.xyz/api/dare';
+    const response = await axios.get(url);
+    return response.question;
+}
+
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {
     handleCommand(interaction);
@@ -757,14 +765,6 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
         });
   }
 }
-
-async function getTruthOrDare(type) {
-    const url = type === 'truth' 
-        ? 'https://api.truthordarebot.xyz/v1/truth' 
-        : 'https://api.truthordarebot.xyz/api/dare';
-    const response = await axios.get(url);
-    return response.data;
-      }
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

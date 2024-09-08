@@ -585,10 +585,14 @@ async function handleCommand(interaction) {
       ephemeral: true
     });
 
-  } else if (commandName === 'truth-or-dare') {
-    const option = interaction.options.getString('type');
+  } else if (commandName === 'truthordare') {
+    const option = interaction.options.getString('type') || 'dare';
     const data = await getTruthOrDare(option);
-    const { question } = data;
+    const { question, rating } = data;
+
+    if (rating !== 'R') {
+        return interaction.reply({ content: 'Only Rated R questions are allowed.', ephemeral: true });
+    }
 
     const embed = new EmbedBuilder()
       .setTitle(option === 'truth' ? 'Truth' : 'Dare')
@@ -611,79 +615,87 @@ async function handleCommand(interaction) {
     );
 
     await interaction.reply({ embeds: [embed], components: [row] });
-  }
+}
 
-  if (interaction.isButton()) {
+if (interaction.isButton()) {
     if (interaction.customId === 'answer') {
-      const modal = new ModalBuilder()
-        .setCustomId('answer_modal')
-        .setTitle('Submit Your Answer');
+        const modal = new ModalBuilder()
+            .setCustomId('answer_modal')
+            .setTitle('Submit Your Answer');
 
-      const answerInput = new TextInputBuilder()
-        .setCustomId('answer_input')
-        .setLabel('Your Answer')
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+        const answerInput = new TextInputBuilder()
+            .setCustomId('answer_input')
+            .setLabel('Your Answer')
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true);
 
-      const answerRow = new ActionRowBuilder().addComponents(answerInput);
-      modal.addComponents(answerRow);
+        const answerRow = new ActionRowBuilder().addComponents(answerInput);
+        modal.addComponents(answerRow);
 
-      await interaction.showModal(modal);
+        await interaction.showModal(modal);
     }
 
     if (interaction.customId === 'skip') {
-      const option = interaction.message.embeds[0].title.toLowerCase();
-      const data = await getTruthOrDare(option);
-      const { question } = data;
+        const option = interaction.message.embeds[0].title.toLowerCase();
+        const data = await getTruthOrDare(option);
+        const { question, rating } = data;
 
-      const embed = new EmbedBuilder()
-        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
-        .setDescription(question)
-        .setColor(0x00AE86);
+        if (rating !== 'R') {
+            return interaction.reply({ content: 'Only Rated R questions are allowed.', ephemeral: true });
+        }
 
-      await interaction.update({ embeds: [embed] });
+        const embed = new EmbedBuilder()
+            .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+            .setDescription(question)
+            .setColor(0x00AE86);
+
+        await interaction.update({ embeds: [embed] });
     }
 
     if (interaction.customId === 'stop') {
-      await interaction.update({ content: 'Game stopped!', components: [], embeds: [] });
+        await interaction.update({ content: 'Game stopped!', components: [], embeds: [] });
     }
-  }
+}
 
-  if (interaction.type === InteractionType.ModalSubmit) {
+if (interaction.type === InteractionType.ModalSubmit) {
     if (interaction.customId === 'answer_modal') {
-      const answer = interaction.fields.getTextInputValue('answer_input');
+        const answer = interaction.fields.getTextInputValue('answer_input');
 
-      await interaction.update({
-        content: `You answered: ${answer}. Let's move on!`,
-        components: [],
-      });
+        await interaction.update({
+            content: `You answered: ${answer}. Let's move on!`,
+            components: [],
+        });
 
-      const option = interaction.message.embeds[0].title.toLowerCase();
-      const data = await getTruthOrDare(option);
-      const { question } = data;
+        const option = interaction.message.embeds[0].title.toLowerCase();
+        const data = await getTruthOrDare(option);
+        const { question, rating } = data;
 
-      const embed = new EmbedBuilder()
-        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
-        .setDescription(question)
-        .setColor(0x00AE86);
+        if (rating !== 'R') {
+            return interaction.reply({ content: 'Only Rated R questions are allowed.', ephemeral: true });
+        }
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('answer')
-          .setLabel('Answer')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId('skip')
-          .setLabel('Skip')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId('stop')
-          .setLabel('Stop')
-          .setStyle(ButtonStyle.Danger)
-      );
+        const embed = new EmbedBuilder()
+            .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+            .setDescription(question)
+            .setColor(0x00AE86);
 
-      await interaction.followUp({ embeds: [embed], components: [row] });
-     }
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId('answer')
+              .setLabel('Answer')
+              .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+              .setCustomId('skip')
+              .setLabel('Skip')
+              .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+              .setCustomId('stop')
+              .setLabel('Stop')
+              .setStyle(ButtonStyle.Danger)
+        );
+
+        await interaction.followUp({ embeds: [embed], components: [row] });
+      }
   } else if (commandName === 'avatar') {
     const user = interaction.options.getUser('user') || interaction.user;
     
@@ -747,9 +759,12 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 }
 
 async function getTruthOrDare(type) {
-  const response = await axios.get(`https://api.truthordare/api/v1/${type}`);
-  return response.data;
-}
+    const url = type === 'truth' 
+        ? 'https://api.truthordarebot.xyz/v1/truth' 
+        : 'https://api.truthordarebot.xyz/api/dare';
+    const response = await axios.get(url);
+    return response.data;
+      }
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

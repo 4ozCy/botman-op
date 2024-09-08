@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputStyle, TextInputBuilder } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -273,6 +273,19 @@ const commands = [
       option.setName('user')
         .setDescription('The user whose avatar you want to see')
         .setRequired(false))
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('truth-or-dare')
+    .setDescription('Play Truth or Dare')
+    .addStringOption(option =>
+      option.setName('type')
+        .setDescription('Choose Truth or Dare')
+        .setRequired(false)
+        .addChoices(
+          { name: 'Truth', value: 'truth' },
+          { name: 'Dare', value: 'dare' }
+        )
+    )
     .toJSON(),
 ];
 
@@ -572,6 +585,109 @@ async function handleCommand(interaction) {
       ephemeral: true
     });
 
+  } else if (commandName === 'truth-or-dare') {
+      const option = interaction.options.getString('type');
+
+      const data = await getTruthOrDare(option);
+      const { question } = data;
+
+      const embed = new EmbedBuilder()
+        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+        .setDescription(question)
+        .setColor(0x00AE86);
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('answer')
+          .setLabel('Answer')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId('skip')
+          .setLabel('Skip')
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId('stop')
+          .setLabel('Stop')
+          .setStyle(ButtonStyle.Danger)
+      );
+
+      await interaction.reply({ embeds: [embed], components: [row] });
+    }
+  }
+
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+
+    if (customId === 'answer') {
+      const modal = new ModalBuilder()
+        .setCustomId('answer_modal')
+        .setTitle('Submit Your Answer');
+
+      const answerInput = new TextInputBuilder()
+        .setCustomId('answer_input')
+        .setLabel('Your Answer')
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      const answerRow = new ActionRowBuilder().addComponents(answerInput);
+      modal.addComponents(answerRow);
+
+      await interaction.showModal(modal);
+    }
+
+    if (customId === 'skip') {
+      const option = interaction.message.embeds[0].title.toLowerCase();
+      const data = await getTruthOrDare(option);
+      const { question } = data;
+
+      const embed = new EmbedBuilder()
+        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+        .setDescription(question)
+        .setColor(0x00AE86);
+
+      await interaction.update({ embeds: [embed] });
+    }
+
+    if (customId === 'stop') {
+      await interaction.update({ content: 'Game stopped!', components: [], embeds: [] });
+    }
+  }
+
+  if (interaction.type === InteractionType.ModalSubmit) {
+    if (interaction.customId === 'answer_modal') {
+      const answer = interaction.fields.getTextInputValue('answer_input');
+
+      await interaction.update({
+        content: `You answered: ${answer}. Let's move on!`,
+        components: [],
+      });
+
+      const option = interaction.message.embeds[0].title.toLowerCase(); // Get the current type (Truth/Dare)
+      const data = await getTruthOrDare(option);
+      const { question } = data;
+
+      const embed = new EmbedBuilder()
+        .setTitle(option === 'truth' ? 'Truth' : 'Dare')
+        .setDescription(question)
+        .setColor(0x00AE86);
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('answer')
+          .setLabel('Answer')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId('skip')
+          .setLabel('Skip')
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId('stop')
+          .setLabel('Stop')
+          .setStyle(ButtonStyle.Danger)
+      );
+
+      await interaction.followUp({ embeds: [embed], components: [row] });
+      }
   } else if (commandName === 'avatar') {
     const user = interaction.options.getUser('user') || interaction.user;
     
@@ -632,6 +748,11 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
             interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
         });
   }
+}
+
+async function getTruthOrDare(type) {
+  const response = await axios.get(`https://api.truthordare/api/v1/${type}`);
+  return response.data;
 }
 
 app.listen(port, () => {

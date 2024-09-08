@@ -8,8 +8,6 @@ const { open } = require('sqlite');
 const port = process.env.PORT || 3000;
 const axios = require('axios');
 const session = require('express-session');
-const ytdl = require('ytdl-core');
-const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -276,22 +274,6 @@ const commands = [
         .setDescription('The user whose avatar you want to see')
         .setRequired(false))
     .toJSON(),
-  new SlashCommandBuilder()
-        .setName('convert')
-        .setDescription('Convert YouTube video to MP3 or MP4')
-        .addStringOption(option => 
-            option.setName('url')
-                .setDescription('The YouTube URL to convert')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('format')
-                .setDescription('Choose format: MP3 or MP4')
-                .setRequired(true)
-                .addChoices(
-                    { name: 'MP3', value: 'mp3' },
-                    { name: 'MP4', value: 'mp4' }
-                ))
-        .toJSON(),
 ];
 
 (async () => {
@@ -307,8 +289,6 @@ const commands = [
     console.error('Error registering application commands:', error);
   }
 })();
-
-const CHATGPT_CHANNEL = '1281637504860291073';
 
 const REAL_LIFE = '1280962423553265785';
 const HENTAI = '1281186733941325855';
@@ -598,50 +578,11 @@ async function handleCommand(interaction) {
     const avatarEmbed = new EmbedBuilder()
       .setColor('#7289DA')
       .setTitle(`${user.tag}'s Avatar`)
-      .setImage(user.displayAvatarURL({ dynamic: true, size: 5000 }))
+      .setImage(user.displayAvatarURL({ dynamic: true, size: 4096 }))
       .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
     
     await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });
 
-  } else if (commandName === 'convert') {
-        const url = options.getString('url');
-    const format = options.getString('format');
-
-    if (!ytdl.validateURL(url)) {
-        return interaction.reply({ content: 'Invalid YouTube URL', ephemeral: true });
-    }
-
-    try {
-        const videoInfo = await ytdl.getInfo(url);
-        const videoTitle = videoInfo.videoDetails.title;
-        const videoId = videoInfo.videoDetails.videoId;
-
-        const outputPath = path.join(__dirname, `${videoId}.${format}`);
-
-        interaction.reply({ content: `Downloading and converting **${videoTitle}** to **${format.toUpperCase()}**...` });
-
-        const stream = ytdl(url, { quality: 'highestaudio' });
-
-        ffmpeg(stream)
-            .output(outputPath)
-            .on('end', async () => {
-                const attachment = new AttachmentBuilder(outputPath);
-                await interaction.editReply({
-                    content: `**${videoTitle}** has been successfully converted to **${format.toUpperCase()}**.`,
-                    files: [attachment]
-                });
-                fs.unlinkSync(outputPath);
-            })
-            .on('error', err => {
-                console.error('ffmpeg error:', err);
-                interaction.editReply({ content: `Error during conversion: ${err.message}` });
-            })
-            .run();
-
-    } catch (err) {
-        console.error('Error fetching video info:', err);
-        return interaction.reply({ content: `Error fetching video info: ${err.message}`, ephemeral: true });
-      }
   } else  if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');
     const anonymousMessage = interaction.options.getString('message');

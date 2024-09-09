@@ -303,7 +303,8 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const mentionedUsers = message.mentions.users;
-
+    if (mentionedUsers.has(OWNER)) {
+    try {
       const user = await client.users.fetch(OWNER);
 
       const dmEmbed = new EmbedBuilder()

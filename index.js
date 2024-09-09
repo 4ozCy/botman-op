@@ -106,11 +106,12 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageContent
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
 
-const ID = '1107744228773220473';
+const OWNER = '1107744228773220473';
 
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -303,31 +304,32 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const mentionedUsers = message.mentions.users;
-  if (mentionedUsers.has(ID)) {
+  if (mentionedUsers.has(MY_USER_ID)) {
     const embed = new EmbedBuilder()
       .setColor('#00AE86')
       .setTitle('Important Notice')
       .setDescription(`Hey there ${message.author},\n\nI noticed that you mentioned my owner, Denzo. I just wanted to inform you that he needs to take a break for about a month to deal with some personal matters related to relationships, friendships, and family issues.\n\nHe appreciates your patience and support during this time. He’ll be back and in touch once things settle down.\n\nThanks for understanding!`)
-      .addField('Additional Info', 'During his break, responses might be delayed. Please be patient and understanding.')
-      .setFooter({ text: 'Thank you for your patience and support!' });
+      .setFooter({ text: 'Best Regards [Botman] his assistant.' });
 
     try {
       await message.reply({ embeds: [embed] });
       console.log(`Reply sent in ${message.channel.name}`);
 
-      const user = await client.users.fetch(ID);
+      const user = await client.users.fetch(MY_USER_ID);
 
       const dmEmbed = new EmbedBuilder()
         .setColor('#00AE86')
         .setTitle('Mention Notification')
         .setDescription(`You were mentioned by ${message.author.tag} in ${message.guild.name}.`)
-        .addField('Message Content', message.content || 'No content')
-        .addField('Mention Time', new Date().toLocaleString())
+        .addFields([
+          { name: 'Message Content', value: message.content || 'No content' },
+          { name: 'Mention Time', value: new Date().toLocaleString() }
+        ])
         .setFooter({ text: 'Notification from your Discord bot' });
 
       await user.send({ embeds: [dmEmbed] });
     } catch (error) {
-      console.error(`Could not send reply or DM:`, error);
+      console.error('Could not send reply or DM:', error);
     }
   }
 });

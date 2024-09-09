@@ -304,18 +304,18 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const mentionedUsers = message.mentions.users;
-  if (mentionedUsers.has(MY_USER_ID)) {
+  if (mentionedUsers.has(OWNER)) {
     const embed = new EmbedBuilder()
       .setColor('#00AE86')
-      .setTitle('Important Notice')
-      .setDescription(`Hey there ${message.author},\n\nI noticed that you mentioned my owner, Denzo. I just wanted to inform you that he needs to take a break for about a month to deal with some personal matters related to relationships, friendships, and family issues.\n\nHe appreciates your patience and support during this time. He’ll be back and in touch once things settle down.\n\nThanks for understanding!`)
+      .setTitle('Important Note')
+      .setDescription(`Hey there ${message.author},\n\nI noticed that you mentioned my owner, Denzo. I just wanted to inform you that he needs to take a break for about a month to deal with some personal matters related to family issues.\n\nHe appreciates your patience and support during this time. He’ll be back and in touch once things settle down.\n\nThanks for understanding!`)
       .setFooter({ text: 'Best Regards [Botman] his assistant.' });
 
     try {
       await message.reply({ embeds: [embed] });
       console.log(`Reply sent in ${message.channel.name}`);
 
-      const user = await client.users.fetch(MY_USER_ID);
+      const user = await client.users.fetch(OWNER);
 
       const dmEmbed = new EmbedBuilder()
         .setColor('#00AE86')

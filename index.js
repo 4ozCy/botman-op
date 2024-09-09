@@ -636,25 +636,47 @@ async function handleCommand(interaction) {
     });
   
   } else if (commandName === 'file-hosting') {
-    const file = interaction.options.getAttachment('file');
-    const fileUrl = file.url;
+  const file = interaction.options.getAttachment('file');
+  const fileUrl = file.url;
 
-    await interaction.deferReply();
+  await interaction.deferReply();
 
-    try {
-      const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-      const formData = new FormData();
-      formData.append('file', response.data, file.name);
+  const uploadingEmbed = new EmbedBuilder()
+    .setColor('#FFFF00')
+    .setTitle('Uploading Your File')
+    .setDescription('Your file is now being uploaded. Please wait...')
+    .setFooter({ text: 'File Hosting Service' });
 
-      const uploadResponse = await axios.post('http://file-hosting.onrender.com/api/file/hosting', formData, {
-        headers: formData.getHeaders(),
-      });
+  await interaction.editReply({ embeds: [uploadingEmbed] });
 
-      const hostedFileUrl = uploadResponse.data.fileUrl;
-      await interaction.editReply(`Your file has been uploaded! You can access it here: ${hostedFileUrl}`);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      await interaction.editReply('There was an error uploading your file. Please try again later.');
+  try {
+    const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+    const formData = new FormData();
+    formData.append('file', response.data, interaction.options.getAttachment('file').name);
+
+    const uploadResponse = await axios.post('http://file-hosting.onrender.com/api/file/hosting', formData, {
+      headers: formData.getHeaders(),
+    });
+
+    const hostedFileUrl = uploadResponse.data.fileUrl;
+
+    const successEmbed = new EmbedBuilder()
+      .setColor('#00FF00')
+      .setTitle('File Uploaded Successfully')
+      .setDescription(`Your file has been uploaded! [Click here to access it](${hostedFileUrl})`)
+      .setFooter({ text: 'File Hosting Service' });
+
+    await interaction.editReply({ embeds: [successEmbed] });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+
+    const errorEmbed = new EmbedBuilder()
+      .setColor('#FF0000')
+      .setTitle('File Upload Failed')
+      .setDescription('There was an error uploading your file. Please try again later.')
+      .setFooter({ text: 'File Hosting Service' });
+
+    await interaction.editReply({ embeds: [errorEmbed] });
      }
   } else if (commandName === 'avatar') {
     const user = interaction.options.getUser('user') || interaction.user;

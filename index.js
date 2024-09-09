@@ -313,38 +313,6 @@ const commands = [
   }
 })();
 
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-
-  const mentionedUsers = message.mentions.users;
-  if (mentionedUsers.has(OWNER)) {
-    const embed = new EmbedBuilder()
-      .setColor('#00AE86')
-      .setTitle('Important Note')
-      .setDescription(`Hey there ${message.author},\n\nI noticed that you mentioned my owner, Denzo. I just wanted to inform you that he needs to take a break for about a month to deal with some personal matters related to family issues.\n\nHe appreciates your patience and support during this time. He’ll be back and in touch once things settle down.\n\nThanks for understanding!`)
-    .setFooter({ text: 'Best regards | Botman' });
-    
-    try {
-      await message.reply({ embeds: [embed] });
-      console.log(`Reply sent in ${message.channel.name}`);
-
-      const user = await client.users.fetch(OWNER);
-
-      const dmEmbed = new EmbedBuilder()
-        .setColor('#00AE86')
-        .setTitle('Mention Notification')
-        .setDescription(`You were mentioned by ${message.author.tag} in ${message.guild.name}.`)
-        .addField('Message Content', message.content || 'No content')
-        .addField('Mention Time', new Date().toLocaleString())
-        .setFooter({ text: 'Notification from your Discord bot' });
-
-      await user.send({ embeds: [dmEmbed] });
-    } catch (error) {
-      console.error(`Could not send reply or DM:`, error);
-    }
-  }
-});
-
 const REAL_LIFE = '1280962423553265785';
 const HENTAI = '1281186733941325855';
 

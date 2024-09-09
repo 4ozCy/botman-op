@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputStyle, TextInputBuilder, InteractionType } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const passport = require('passport');
@@ -106,7 +106,6 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessageContent,
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });

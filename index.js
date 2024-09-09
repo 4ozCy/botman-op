@@ -276,19 +276,6 @@ const commands = [
         .setRequired(false))
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('truth-or-dare')
-    .setDescription('Play Truth or Dare')
-    .addStringOption(option =>
-      option.setName('type')
-        .setDescription('Choose Truth or Dare')
-        .setRequired(false)
-        .addChoices(
-          { name: 'Truth', value: 'truth' },
-          { name: 'Dare', value: 'dare' }
-        )
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
   .setName('file-hosting')
   .setDescription('Upload a file to the file hosting server')
   .addAttachmentOption(option =>

@@ -290,10 +290,10 @@ const commands = [
 
   try {
     await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID),
       { body: commands }
     );
-    console.log('Successfully registered application commands.');
+    console.log('Successfully registered (/) application commands.');
   } catch (error) {
     console.error('Error registering application commands:', error);
   }

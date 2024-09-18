@@ -621,24 +621,26 @@ async function handleCommand(interaction) {
       ephemeral: true
     });
 
-  } else   if (interaction.commandName === 'generate-image') {
+  } else if (interaction.commandName === 'generate-image') {
         const prompt = interaction.options.getString('prompt');
 
         await interaction.deferReply();
 
         try {
-            const response = await axios.post(
+            const response = await fetch(
                 'https://api-inference.huggingface.co/models/prompthero/openjourney',
-                { inputs: prompt },
                 {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${HF_KEY}`,
-                    }
+                    },
+                    body: JSON.stringify({ inputs: prompt })
                 }
             );
 
-            const imageUrl = response.data.image_url;
+            const data = await response.json();
+            const imageUrl = data.image_url;
 
             if (imageUrl) {
                 const embed = new EmbedBuilder()
@@ -646,7 +648,7 @@ async function handleCommand(interaction) {
                     .setDescription(`Prompt: ${prompt}`)
                     .setImage(imageUrl)
                     .setColor(0x00AE86)
-                    .setFooter({ text: 'Powered by: @nozcy.int' });
+                    .setFooter({ text: 'Powered by: @nozcy.int'' });
 
                 await interaction.editReply({ embeds: [embed] });
             } else {

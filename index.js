@@ -111,6 +111,7 @@ const client = new Client({
 });
 
 const OWNER = '1107744228773220473';
+const HF_KEY = process.env.HF_KEY;
 
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -130,8 +131,6 @@ dbPromise.then(db => {
     warnings INTEGER DEFAULT 0
   )`);
 });
-
-process.env.YTDL_NO_UPDATE = 'true';
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -282,6 +281,14 @@ const commands = [
     option.setName('file')
       .setDescription('The file to upload')
       .setRequired(true))
+  .toJSON(),
+  new SlashCommandBuilder()
+    .setName('generate-image')
+    .setDescription('Generate an image from a prompt')
+    .addStringOption(option => 
+        option.setName('prompt')
+            .setDescription('The text prompt for image generation')
+            .setRequired(true))
   .toJSON(),
 ];
 
@@ -613,7 +620,42 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
-  
+
+  } else   if (interaction.commandName === 'generate-image') {
+        const prompt = interaction.options.getString('prompt');
+
+        await interaction.deferReply();
+
+        try {
+            const response = await axios.post(
+                'https://api-inference.huggingface.co/models/prompthero/openjourney',
+                { inputs: prompt },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${HF_KEY}`,
+                    }
+                }
+            );
+
+            const imageUrl = response.data.image_url;
+
+            if (imageUrl) {
+                const embed = new EmbedBuilder()
+                    .setTitle('Generated Image')
+                    .setDescription(`Prompt: ${prompt}`)
+                    .setImage(imageUrl)
+                    .setColor(0x00AE86)
+                    .setFooter({ text: 'Powered by: @nozcy.int' });
+
+                await interaction.editReply({ embeds: [embed] });
+            } else {
+                await interaction.editReply('Sorry, no image was generated.');
+            }
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply('There was an error generating the image.');
+     }
   } else if (commandName === 'file-hosting') {
   const file = interaction.options.getAttachment('file');
   const fileUrl = file.url;

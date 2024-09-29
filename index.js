@@ -282,14 +282,6 @@ const commands = [
       .setDescription('The file to upload')
       .setRequired(true))
   .toJSON(),
-  new SlashCommandBuilder()
-    .setName('generate-image')
-    .setDescription('Generate an image from a prompt')
-    .addStringOption(option => 
-        option.setName('prompt')
-            .setDescription('The text prompt for image generation')
-            .setRequired(true))
-  .toJSON(),
 ];
 
 (async () => {
@@ -389,7 +381,6 @@ async function startRequests(channel, type) {
             }
             const embed = new EmbedBuilder()
                 .setTitle(type === 'realLife' ? 'Real life' : 'Hentai')
-                .setColor('#FF69B4')
                 .setImage(gifUrl);
 
             await channel.send({ embeds: [embed] });
@@ -442,14 +433,6 @@ client.on('messageCreate', async message => {
         }
     }
 });
-
-async function getTruthOrDare(type) {
-    const url = type === 'truth' 
-        ? 'https://api.truthordarebot.xyz/v1/truth' 
-        : 'https://api.truthordarebot.xyz/api/dare';
-    const response = await axios.get(url);
-    return response.question;
-}
 
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {
@@ -594,7 +577,6 @@ async function handleCommand(interaction) {
             { name: 'Roles', value: targetMember.roles.cache.map(role => role.name).join(', ') || 'None', inline: true },
           ],
           thumbnail: { url: user.displayAvatarURL({ dynamic: true }) },
-          color: 0x7289DA,
         }
       ],
       ephemeral: true
@@ -615,49 +597,10 @@ async function handleCommand(interaction) {
             { name: 'Channels', value: `${guild.channels.cache.size}`, inline: true },
           ],
           thumbnail: { url: guild.iconURL({ dynamic: true }) },
-          color: 0x7289DA,
         }
       ],
       ephemeral: true
     });
-
-  } else if (interaction.commandName === 'generate-image') {
-        const prompt = interaction.options.getString('prompt');
-
-        await interaction.deferReply();
-
-        try {
-            const response = await fetch(
-                'https://api-inference.huggingface.co/models/prompthero/openjourney',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${HF_KEY}`,
-                    },
-                    body: JSON.stringify({ inputs: prompt })
-                }
-            );
-
-            const data = await response.json();
-            const imageUrl = data.image_url;
-
-            if (imageUrl) {
-                const embed = new EmbedBuilder()
-                    .setTitle('Generated Image')
-                    .setDescription(`Prompt: ${prompt}`)
-                    .setImage(imageUrl)
-                    .setColor(0x00AE86)
-                    .setFooter({ text: 'Powered by: @nozcy.int'' });
-
-                await interaction.editReply({ embeds: [embed] });
-            } else {
-                await interaction.editReply('Sorry, no image was generated.');
-            }
-        } catch (error) {
-            console.error(error);
-            await interaction.editReply('There was an error generating the image.');
-     }
   } else if (commandName === 'file-hosting') {
   const file = interaction.options.getAttachment('file');
   const fileUrl = file.url;
@@ -665,7 +608,6 @@ async function handleCommand(interaction) {
   await interaction.deferReply();
 
   const uploadingEmbed = new EmbedBuilder()
-    .setColor('#FFFF00')
     .setTitle('Uploading Your File')
     .setDescription('Your file is now being uploaded. Please wait...')
     .setFooter({ text: 'File Hosting Service' });
@@ -677,7 +619,7 @@ async function handleCommand(interaction) {
     const formData = new FormData();
     formData.append('file', response.data, interaction.options.getAttachment('file').name);
 
-    const uploadResponse = await axios.post('http://file-hosting.onrender.com/api/file/hosting', formData, {
+    const uploadResponse = await axios.post('http://files-box.vercel.app/api/file/hosting', formData, {
       headers: formData.getHeaders(),
     });
 
@@ -705,7 +647,6 @@ async function handleCommand(interaction) {
     const user = interaction.options.getUser('user') || interaction.user;
     
     const avatarEmbed = new EmbedBuilder()
-      .setColor('#7289DA')
       .setTitle(`${user.tag}'s Avatar`)
       .setImage(user.displayAvatarURL({ dynamic: true, size: 4096 }))
       .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
@@ -738,7 +679,6 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
           const loginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
 
           const embed = new EmbedBuilder()
-            .setColor('#7289DA')
             .setTitle('Login Required')
             .setDescription('To use this command, you need to login through our application. Please click the button below to login.');
           

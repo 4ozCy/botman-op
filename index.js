@@ -323,9 +323,6 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-const REAL_LIFE = '1280962423553265785';
-const HENTAI = '1281186733941325855';
-
 let isRequestingRealLife = false;
 let isRequestingHentai = false;
 
@@ -336,7 +333,7 @@ async function startRequests(channel, type) {
         isRequestingHentai = true;
     }
 
-    channel.send('Started making requests.');
+    await channel.send('Started making requests.');
 
     while ((type === 'realLife' ? isRequestingRealLife : isRequestingHentai)) {
         try {
@@ -368,7 +365,7 @@ async function startRequests(channel, type) {
 
             const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
             const response = await axios.get(randomApiUrl);
-             let gifUrl;
+            let gifUrl;
             if (randomApiUrl.includes('gelbooru.com')) {
                 const post = response.data.post[0];
                 if (post.file_url.endsWith('.gif')) {
@@ -380,7 +377,7 @@ async function startRequests(channel, type) {
                 gifUrl = response.data.message || response.data.link;
             }
             const embed = new EmbedBuilder()
-                .setTitle(type === 'realLife' ? 'Real life' : 'Hentai')
+                .setTitle(type === 'realLife' ? 'Real Life' : 'Hentai')
                 .setImage(gifUrl);
 
             await channel.send({ embeds: [embed] });
@@ -402,33 +399,47 @@ function stopRequests(type, channel) {
     channel.send('Stopped making requests.');
 }
 
-client.on('messageCreate', async message => {
-    if (message.channel.id === REAL_LIFE) {
-        if (message.content.toLowerCase().includes('start')) {
-            if (!isRequestingRealLife) {
-                startRequests(message.channel, 'realLife');
-            } else {
-                message.channel.send('Requests are already running.');
-            }
-        } else if (message.content.toLowerCase().includes('stop')) {
-            if (isRequestingRealLife) {
-                stopRequests('realLife', message.channel);
-            } else {
-                message.channel.send('Requests are not running.');
-            }
+client.on('messageCreate', async (message) => {
+    if (message.author.dmChannel) {
+        if (message.content.toLowerCase() === 'start') {
+            const embed = new EmbedBuilder()
+                .setTitle('Choose an Option')
+                .setDescription('Click a button to start either Real Life or Hentai requests.');
+
+            const row = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('realLife')
+                        .setLabel('Real Life')
+                        .setStyle('Primary'),
+                    new ButtonBuilder()
+                        .setCustomId('hentai')
+                        .setLabel('Hentai')
+                        .setStyle('Secondary')
+                );
+
+            await message.author.dmChannel.send({ embeds: [embed], components: [row] });
         }
-    } else if (message.channel.id === HENTAI) {
-        if (message.content.toLowerCase().includes('start')) {
-            if (!isRequestingHentai) {
-                startRequests(message.channel, 'hentai');
+    }
+});
+
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+
+    if (interaction.user.dmChannel) {
+        if (interaction.customId === 'realLife') {
+            if (!isRequestingRealLife) {
+                startRequests(interaction.user.dmChannel, 'realLife');
+                await interaction.reply({ content: 'Started Real Life requests.', ephemeral: true });
             } else {
-                message.channel.send('Requests are already running.');
+                await interaction.reply({ content: 'Requests are already running for Real Life.', ephemeral: true });
             }
-        } else if (message.content.toLowerCase().includes('stop')) {
-            if (isRequestingHentai) {
-                stopRequests('hentai', message.channel);
+        } else if (interaction.customId === 'hentai') {
+            if (!isRequestingHentai) {
+                startRequests(interaction.user.dmChannel, 'hentai');
+                await interaction.reply({ content: 'Started Hentai requests.', ephemeral: true });
             } else {
-                message.channel.send('Requests are not running.');
+                await interaction.reply({ content: 'Requests are already running for Hentai.', ephemeral: true });
             }
         }
     }

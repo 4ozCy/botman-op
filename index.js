@@ -14,7 +14,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION,
   resave: false,
   saveUninitialized: false,
   cookie: { secure: true, httpOnly: true, maxAge: 3 * 60 * 1000 }
@@ -24,8 +24,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new DiscordStrategy({
-  clientID: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
+  clientID: process.env.CLIENT,
+  clientSecret: process.env.CLIENTS,
   callbackURL: `${process.env.BASE_URL}/auth/discord/callback`,
   scope: ['identify', 'guilds']
 }, async (accessToken, refreshToken, profile, done) => {
@@ -109,9 +109,6 @@ const client = new Client({
   ],
   partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
 });
-
-const OWNER = '1107744228773220473';
-const HF_KEY = process.env.HF_KEY;
 
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -274,14 +271,6 @@ const commands = [
         .setDescription('The user whose avatar you want to see')
         .setRequired(false))
     .toJSON(),
-  new SlashCommandBuilder()
-  .setName('file-hosting')
-  .setDescription('Upload a file to the file hosting server')
-  .addAttachmentOption(option =>
-    option.setName('file')
-      .setDescription('The file to upload')
-      .setRequired(true))
-  .toJSON(),
 ];
 
 (async () => {
@@ -289,7 +278,7 @@ const commands = [
 
   try {
     await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT, process.env.GUILD),
       { body: commands }
     );
     console.log('Successfully registered (/) application commands.');
@@ -306,8 +295,7 @@ client.on('messageCreate', async (message) => {
     try {
       const user = await client.users.fetch(OWNER);
 
-      const dmEmbed = new EmbedBuilder()
-        .setColor('#00AE86')
+      const dmEmbed = new EmbedBuilder({
         .setTitle('Mention Notification')
         .setDescription(`You were mentioned by ${message.author.tag} in ${message.guild.name}.`)
         .addFields([
@@ -321,106 +309,6 @@ client.on('messageCreate', async (message) => {
       console.error('Could not send reply or DM:', error);
     }
   }
-});
-
-let isRequestingRealLife = false;
-let isRequestingHentai = false;
-
-async function startRequests(channel, type) {
-    if (type === 'realLife') {
-        isRequestingRealLife = true;
-    } else if (type === 'hentai') {
-        isRequestingHentai = true;
-    }
-
-    await channel.send('Started making requests.');
-
-    while ((type === 'realLife' ? isRequestingRealLife : isRequestingHentai)) {
-        try {
-            const apiUrls = type === 'realLife'
-                ? [
-                    'https://nekobot.xyz/api/image?type=pussy',
-                    'https://nekobot.xyz/api/image?type=boobs',
-                    'https://nekobot.xyz/api/image?type=ass',
-                    'https://nekobot.xyz/api/image?type=anal'
-                  ]
-                : [
-                    'https://purrbot.site/api/img/nsfw/fuck/gif',
-                    'https://purrbot.site/api/img/nsfw/anal/gif',
-                    'https://purrbot.site/api/img/nsfw/pussylick/gif',
-                    'https://purrbot.site/api/img/nsfw/yuri/gif',
-                    'https://nekobot.xyz/api/image?type=hass',
-                    'https://nekobot.xyz/api/image?type=hyuri',
-                    'https://nekobot.xyz/api/image?type=hentai',
-                    'https://nekobot.xyz/api/image?type=hboobs',
-                    'https://nekobot.xyz/api/image?type=hentai_anal',
-                    'https://api.waifu.pics/nsfw/waifu',
-                    'https://purrbot.site/api/img/nsfw/threesome_mmf/gif',
-                    'https://purrbot.site/api/img/nsfw/threesome_ffm/gif',
-                    'https://purrbot.site/api/img/nsfw/threesome_fff/gif',
-                    'https://purrbot.site/api/img/nsfw/cum/gif/',
-                    'https://nekobot.xyz/api/image?type=hmidriff',
-                    'https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=hentai+animated&limit=1'
-                  ];
-
-            const randomApiUrl = apiUrls[Math.floor(Math.random() * apiUrls.length)];
-            const response = await axios.get(randomApiUrl);
-            let gifUrl;
-            if (randomApiUrl.includes('gelbooru.com')) {
-                const post = response.data.post[0];
-                if (post.file_url.endsWith('.gif')) {
-                    gifUrl = post.file_url;
-                } else {
-                    gifUrl = null;
-                }
-            } else {
-                gifUrl = response.data.message || response.data.link;
-            }
-            const embed = new EmbedBuilder()
-                .setTitle(type === 'realLife' ? 'Real Life' : 'Hentai')
-                .setImage(gifUrl);
-
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error('Error making request:', error);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-}
-
-function stopRequests(type, channel) {
-    if (type === 'realLife') {
-        isRequestingRealLife = false;
-    } else if (type === 'hentai') {
-        isRequestingHentai = false;
-    }
-
-    channel.send('Stopped making requests.');
-}
-
-client.on('messageCreate', async (message) => {
-    if (message.author.dmChannel) {
-        if (message.content.toLowerCase() === 'start') {
-            const embed = new EmbedBuilder()
-                .setTitle('Choose an Option')
-                .setDescription('Click a button to start either Real Life or Hentai requests.');
-
-            const row = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('realLife')
-                        .setLabel('Real Life')
-                        .setStyle('Primary'),
-                    new ButtonBuilder()
-                        .setCustomId('hentai')
-                        .setLabel('Hentai')
-                        .setStyle('Secondary')
-                );
-
-            await message.author.dmChannel.send({ embeds: [embed], components: [row] });
-        }
-    }
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -612,48 +500,7 @@ async function handleCommand(interaction) {
       ],
       ephemeral: true
     });
-  } else if (commandName === 'file-hosting') {
-  const file = interaction.options.getAttachment('file');
-  const fileUrl = file.url;
 
-  await interaction.deferReply();
-
-  const uploadingEmbed = new EmbedBuilder()
-    .setTitle('Uploading Your File')
-    .setDescription('Your file is now being uploaded. Please wait...')
-    .setFooter({ text: 'File Hosting Service' });
-
-  await interaction.editReply({ embeds: [uploadingEmbed] });
-
-  try {
-    const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-    const formData = new FormData();
-    formData.append('file', response.data, interaction.options.getAttachment('file').name);
-
-    const uploadResponse = await axios.post('http://files-box.vercel.app/api/file/hosting', formData, {
-      headers: formData.getHeaders(),
-    });
-
-    const hostedFileUrl = uploadResponse.data.fileUrl;
-
-    const successEmbed = new EmbedBuilder()
-      .setColor('#00FF00')
-      .setTitle('File Uploaded Successfully')
-      .setDescription(`Your file has been uploaded! [Click here to access it](${hostedFileUrl})`)
-      .setFooter({ text: 'File Hosting Service' });
-
-    await interaction.editReply({ embeds: [successEmbed] });
-  } catch (error) {
-    console.error('Error uploading file:', error);
-
-    const errorEmbed = new EmbedBuilder()
-      .setColor('#FF0000')
-      .setTitle('File Upload Failed')
-      .setDescription('There was an error uploading your file. Please try again later.')
-      .setFooter({ text: 'File Hosting Service' });
-
-    await interaction.editReply({ embeds: [errorEmbed] });
-     }
   } else if (commandName === 'avatar') {
     const user = interaction.options.getUser('user') || interaction.user;
     
@@ -678,7 +525,7 @@ async function handleCommand(interaction) {
       console.error(error);
       await interaction.reply({ content: `There was an error sending the message. Please try again.`, ephemeral: true });
      }
-  } else if (commandName === 'get-guilds') {
+  } else if (commandName === 'server-count') {
 db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row) => {
         if (err) {
           console.error('Database error:', err.message);
@@ -691,7 +538,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
           const embed = new EmbedBuilder()
             .setTitle('Login Required')
-            .setDescription('To use this command, you need to login through our application. Please click the button below to login.');
+            .setDescription('To use this command, you need to login through our application. click the button below to login.');
           
           const row = new ActionRowBuilder()
             .addComponents(
@@ -706,11 +553,7 @@ db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row)
 
   const userGuilds = await axios.get('https://discord.com/api/users/@me/guilds', {
                 headers: { Authorization: `Bearer ${row.accessToken}` }
-            });
-
-            const guildCount = userGuilds.data.length;
-            interaction.reply({ content: `You are in ${guildCount} guild(s).`, ephemeral: true });
-        });
+    });
   }
 }
 

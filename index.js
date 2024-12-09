@@ -287,52 +287,6 @@ const commands = [
   }
 })();
 
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-
-  const mentionedUsers = message.mentions.users;
-    if (mentionedUsers.has(OWNER)) {
-    try {
-      const user = await client.users.fetch(OWNER);
-
-      const dmEmbed = new EmbedBuilder({
-        .setTitle('Mention Notification')
-        .setDescription(`You were mentioned by ${message.author.tag} in ${message.guild.name}.`)
-        .addFields([
-          { name: 'Message Content', value: message.content || 'No content' },
-          { name: 'Mention Time', value: new Date().toLocaleString() }
-        ])
-        .setFooter({ text: 'Notification from your Discord bot' });
-
-      await user.send({ embeds: [dmEmbed] });
-    } catch (error) {
-      console.error('Could not send reply or DM:', error);
-    }
-  }
-});
-
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    if (interaction.user.dmChannel) {
-        if (interaction.customId === 'realLife') {
-            if (!isRequestingRealLife) {
-                startRequests(interaction.user.dmChannel, 'realLife');
-                await interaction.reply({ content: 'Started Real Life requests.', ephemeral: true });
-            } else {
-                await interaction.reply({ content: 'Requests are already running for Real Life.', ephemeral: true });
-            }
-        } else if (interaction.customId === 'hentai') {
-            if (!isRequestingHentai) {
-                startRequests(interaction.user.dmChannel, 'hentai');
-                await interaction.reply({ content: 'Started Hentai requests.', ephemeral: true });
-            } else {
-                await interaction.reply({ content: 'Requests are already running for Hentai.', ephemeral: true });
-            }
-        }
-    }
-});
-
 client.on('interactionCreate', async interaction => {
   if (interaction.isCommand()) {
     handleCommand(interaction);

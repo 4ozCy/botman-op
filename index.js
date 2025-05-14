@@ -374,10 +374,10 @@ if (commandName === 'warn') {
       randomString += characters[randomIndex];
     )
 
-    await interaction.reply({ content: `Generated random string: \`${randomString}\``, ephemeral: true });
+    await interaction.reply({ content: `\`${randomString}\``, ephemeral: false });
 
 
-  } else if (commandName === 'anon-msg') {
+  } else if (commandName === 'anonymous-msg') {
     const targetUser = interaction.options.getUser('user');
     const anonymousMessage = interaction.options.getString('message');
 

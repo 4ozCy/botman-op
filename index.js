@@ -34,8 +34,9 @@ const client = new Client({
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   client.user.setActivity({
-    name: "Over Gotham City",
-    type: ActivityType.Watching,
+    name: "Valentine - Laufey",
+    type: ActivityType.Listening,
+ });
 });
 
 const commands = [
@@ -266,7 +267,7 @@ if (commandName === 'warn') {
     const user = options.getUser('user');
     const reason = options.getString('reason') || 'No reason provided';
 
-    if (!warnings[user.id]) warnings[user.id] = 0;
+    if (!warnings[user.id]) warn[user.id] = 0;
     warnings[user.id]++;
     fs.writeFileSync(warningFile, JSON.stringify(warn, null, 2));
 
@@ -275,7 +276,7 @@ if (commandName === 'warn') {
 
   if (commandName === 'warn-count') {
     const user = options.getUser('user');
-    const count = warnings[user.id] || 0;
+    const count = warn[user.id] || 0;
     await interaction.reply(`${user.tag} has ${count} warning(s).`);
   }
     

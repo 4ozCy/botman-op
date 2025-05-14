@@ -36,7 +36,6 @@ client.once('ready', () => {
   client.user.setActivity({
     name: "Over Gotham City",
     type: ActivityType.Watching,
-  });
 });
 
 const commands = [
@@ -97,7 +96,7 @@ const commands = [
         .setRequired(false))
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('warnings')
+    .setName('warn-count')
     .setDescription('Check a users warning count')
     .addUserOption(option =>
       option.setName('user')
@@ -279,7 +278,6 @@ if (commandName === 'warn') {
     const count = warnings[user.id] || 0;
     await interaction.reply(`${user.tag} has ${count} warning(s).`);
   }
-});
     
   } else if (commandName === 'timeout') {
     const user = options.getUser('user');
@@ -365,7 +363,7 @@ if (commandName === 'warn') {
 } else if (commandName === 'random-string') {
     const length = options.getInteger('length');
 
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$?
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$?'
       ';
     let randomString = '';
 

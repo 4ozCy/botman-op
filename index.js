@@ -363,8 +363,7 @@ if (commandName === 'warn') {
 } else if (commandName === 'random-string') {
     const length = options.getInteger('length');
 
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$?'
-      ';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$?';
     let randomString = '';
 
     for (let i = 0; i < length; i++) {

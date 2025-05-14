@@ -373,7 +373,7 @@ if (commandName === 'warn') {
     await interaction.reply({ content: `\`${randomString}\``, ephemeral: false });
 
 
-  } else if (commandName === 'anonymous-msg') {
+  if (commandName === 'anonymous-msg') {
     const targetUser = interaction.options.getUser('user');
     const anonymousMessage = interaction.options.getString('message');
 

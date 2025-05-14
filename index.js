@@ -168,6 +168,16 @@ const commands = [
         .setDescription('The user whose avatar you want to see')
         .setRequired(false))
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('random-string')
+    .setDescription('Generate a random string with a specified length')
+    .addIntegerOption(option =>
+      option.setName('length')
+        .setDescription('The length of the random string')
+        .setRequired(true)
+        .setMinValue(1)
+        .setMaxValue(1000))
+    .toJSON(),
 ];
 
 (async () => {
@@ -351,6 +361,21 @@ if (commandName === 'warn') {
       .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) });
     
     await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });
+
+} else if (commandName === 'random-string') {
+    const length = options.getInteger('length');
+
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$?
+      ';
+    let randomString = '';
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      randomString += characters[randomIndex];
+    )
+
+    await interaction.reply({ content: `Generated random string: \`${randomString}\``, ephemeral: true });
+
 
   } else if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');

@@ -1,102 +1,19 @@
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActivityType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChannelType, PermissionsBitField, StringSelectMenuBuilder, AttachmentBuilder } = require('discord.js');
-const sqlite3 = require('sqlite3').verbose();
+const { 
+  Client, GatewayIntentBits, Partials, REST, Routes, 
+  SlashCommandBuilder, ActivityType 
+} = require('discord.js');
 const express = require('express');
-const passport = require('passport');
-const DiscordStrategy = require('passport-discord').Strategy;
-const app = express();
-const { open } = require('sqlite');
-const port = process.env.PORT || 3000;
-const axios = require('axios');
-const session = require('express-session');
-const FormData = require('form-data');
-const path = require('path');
 const fs = require('fs');
+const app = express();
+const port = process.env.PORT || 3000;
 require('dotenv').config();
 
-app.use(session({
-  secret: process.env.SESSION,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: true, httpOnly: true, maxAge: 3 * 60 * 1000 }
-}));
+const warningFile = './warn.json';
+let warnings = fs.existsSync(warningFile) ? JSON.parse(fs.readFileSync(warningFile)) : {};
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.use(new DiscordStrategy({
-  clientID: process.env.CLIENT,
-  clientSecret: process.env.CLIENTS,
-  callbackURL: `${process.env.BASE_URL}/auth/discord/callback`,
-  scope: ['identify', 'guilds']
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    const userId = profile.id;
-    const username = profile.username;
-
-    db.run(`INSERT OR REPLACE INTO users (id, username, accessToken) VALUES (?, ?, ?)`, [userId, username, accessToken], (err) => {
-      if (err) {
-        console.error('Database error:', err.message);
-        return done(err, null);
-      }
-      return done(null, profile);
-    });
-  } catch (error) {
-    console.error('Error during Discord authentication:', error);
-    return done(error, null);
-  }
-}));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-  db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, user) => {
-    if (err) {
-      return done(err, null);
-    }
-    return done(null, user);
-  });
-});
-
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-  if (err) {
-    console.error('Failed to open the database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
-  }
-});
-
-app.get('/auth/discord', passport.authenticate('discord'));
-
-app.get('/auth/discord/callback', passport.authenticate('discord', {
-  failureRedirect: '/'
-}), (req, res) => {
-  res.redirect('/guild');
-});
-
-app.get('/guild', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.redirect('/auth/discord');
-    }
-
-    db.get(`SELECT accessToken FROM users WHERE id = ?`, [req.user.id], async (err, row) => {
-        const userGuildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
-            headers: { Authorization: `Bearer ${row.accessToken}` }
-        });
-
-        const guildCount = userGuildsResponse.data.length;
-
-        fs.readFile(path.join(__dirname, 'guild.html'), 'utf8', (err, data) => {
-            const modifiedHtml = data.replace('{{guildCount}}', guildCount);
-            res.send(modifiedHtml);
-        });
-    });
-});
-    
 app.get('/', (req, res) => {
-  res.send(`botman here to serve you justice`)
-})
+  res.send(`botman here to serve you justice`);
+});
 
 const client = new Client({
   intents: [
@@ -105,38 +22,22 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildMembers,
   ],
-  partials: [Partials.Channel, Partials.Message, Partials.User, Partials.GuildMember],
-});
-
-db.run(`CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  username TEXT NOT NULL,
-  accessToken TEXT NOT NULL
-)`);
-
-const dbPromise = open({
-  filename: './database.db',
-  driver: sqlite3.Database
-});
-
-dbPromise.then(db => {
-  return db.run(`CREATE TABLE IF NOT EXISTS users (
-    userId TEXT,
-    guildId TEXT,
-    warnings INTEGER DEFAULT 0
-  )`);
+  partials: [
+    Partials.Channel,
+    Partials.Message,
+    Partials.User,
+    Partials.GuildMember
+  ],
 });
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
-
-client.user.setActivity({
-  name: "Over Gotham City",
-  type: ActivityType.Watching,
+  client.user.setActivity({
+    name: "Over Gotham City",
+    type: ActivityType.Watching,
   });
-})
+});
 
 const commands = [
   new SlashCommandBuilder()
@@ -248,10 +149,6 @@ const commands = [
     .setDescription('get information about the server')
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('get-guilds')
-    .setDescription('Get the number of guilds the user is in')
-    .toJSON(),
-  new SlashCommandBuilder()
     .setName('anon-msg')
     .setDescription('Send an anonymous message to a user')
     .addUserOption(option =>
@@ -265,7 +162,7 @@ const commands = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName('avatar')
-    .setDescription('Fetch the avatar of a user.')
+    .setDescription('get the avatar of a user.')
     .addUserOption(option =>
       option.setName('user')
         .setDescription('The user whose avatar you want to see')
@@ -356,34 +253,24 @@ async function handleCommand(interaction) {
       await interaction.reply({ content: `I can't unmute ${user.tag}.`, ephemeral: true });
     }
 
-  } else if (commandName === 'warn') {
+if (commandName === 'warn') {
     const user = options.getUser('user');
     const reason = options.getString('reason') || 'No reason provided';
 
-    const db = await dbPromise;
-    let targetUser = await db.get('SELECT * FROM users WHERE userId = ? AND guildId = ?', [user.id, guild.id]);
+    if (!warnings[user.id]) warnings[user.id] = 0;
+    warnings[user.id]++;
+    fs.writeFileSync(warningFile, JSON.stringify(warn, null, 2));
 
-    if (!targetUser) {
-      await db.run('INSERT INTO users (userId, guildId, warnings) VALUES (?, ?, ?)', [user.id, guild.id, 1]);
-      targetUser = { warnings: 1 };
-    } else {
-      await db.run('UPDATE users SET warnings = warnings + 1 WHERE userId = ? AND guildId = ?', [user.id, guild.id]);
-      targetUser.warnings += 1;
-    }
+    await interaction.reply(`${user.tag} has been warned. Total warnings: ${warn[user.id]}`);
+  }
 
-    await interaction.reply({ content: `${user.tag} has been warned for: ${reason}. They now have ${targetUser.warnings} warning(s).`, ephemeral: true });
-
-  } else if (commandName === 'warnings') {
+  if (commandName === 'warn-count') {
     const user = options.getUser('user');
-    const db = await dbPromise;
-    const targetUser = await db.get('SELECT warnings FROM users WHERE userId = ? AND guildId = ?', [user.id, guild.id]);
-
-    if (!targetUser) {
-      await interaction.reply({ content: `${user.tag} has no warnings.`, ephemeral: true });
-    } else {
-      await interaction.reply({ content: `${user.tag} has ${targetUser.warnings} warning(s).`, ephemeral: true });
-    }
-
+    const count = warnings[user.id] || 0;
+    await interaction.reply(`${user.tag} has ${count} warning(s).`);
+  }
+});
+    
   } else if (commandName === 'timeout') {
     const user = options.getUser('user');
     const duration = options.getInteger('duration');
@@ -465,7 +352,7 @@ async function handleCommand(interaction) {
     
     await interaction.reply({ embeds: [avatarEmbed], ephemeral: true });
 
-  } else  if (commandName === 'anon-msg') {
+  } else if (commandName === 'anon-msg') {
     const targetUser = interaction.options.getUser('user');
     const anonymousMessage = interaction.options.getString('message');
 
@@ -473,41 +360,11 @@ async function handleCommand(interaction) {
       if (anonymousMessage) {
         await targetUser.send(`You have received an anonymous message:\n\n${anonymousMessage}`);
       }
-
       await interaction.reply({ content: `Your anonymous message has been sent to ${targetUser.tag}.`, ephemeral: true });
     } catch (error) {
       console.error(error);
       await interaction.reply({ content: `There was an error sending the message. Please try again.`, ephemeral: true });
-     }
-  } else if (commandName === 'server-count') {
-db.get(`SELECT accessToken FROM users WHERE id = ?`, [user.id], async (err, row) => {
-        if (err) {
-          console.error('Database error:', err.message);
-          return interaction.reply({ content: 'An error occurred. Please try again later.', ephemeral: true });
-        }
-
-        if (!row) {
-          const redirectUri = `${process.env.BASE_URL}/auth/discord/callback`;
-          const loginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify%20guilds`;
-
-          const embed = new EmbedBuilder()
-            .setTitle('Login Required')
-            .setDescription('To use this command, you need to login through our application. click the button below to login.');
-          
-          const row = new ActionRowBuilder()
-            .addComponents(
-              new ButtonBuilder()
-                .setLabel('Login')
-                .setStyle(ButtonStyle.Link)
-                .setURL(loginUrl)
-            );
-
-          return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-        }
-
-  const userGuilds = await axios.get('https://discord.com/api/users/@me/guilds', {
-                headers: { Authorization: `Bearer ${row.accessToken}` }
-    });
+    }
   }
 }
 
